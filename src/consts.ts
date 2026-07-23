@@ -3,6 +3,7 @@ export const ANIMATION_DELAY = 0.1
 export const CARD_SPACING = 36
 export const CARD_SPACING_SM = 24
 export const BLOG_SLUG_KEY = process.env.BLOG_SLUG_KEY || ''
+export const LOCAL_SAVE_ENABLED = process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true'
 
 /**
  * GitHub 仓库配置

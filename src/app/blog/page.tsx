@@ -7,6 +7,7 @@ import { motion } from 'motion/react'
 
 dayjs.extend(weekOfYear)
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { mutate } from 'swr'
 import { toast } from 'sonner'
 import { INIT_DELAY } from '@/consts'
 import ShortLineSVG from '@/svgs/short-line.svg'
@@ -266,6 +267,11 @@ export default function BlogPage() {
 		try {
 			setSaving(true)
 			await saveBlogEdits(items, editableItems, normalizedCategoryList)
+			const sortedItems = [...editableItems].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+			await mutate('/blogs/index.json', sortedItems, { revalidate: false })
+			await mutate('/blogs/categories.json', { categories: normalizedCategoryList }, { revalidate: false })
+			void mutate('/blogs/index.json')
+			void mutate('/blogs/categories.json')
 			setEditMode(false)
 			setSelectedSlugs(new Set())
 			setCategoryModalOpen(false)

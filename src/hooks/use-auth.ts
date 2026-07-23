@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { LOCAL_SAVE_ENABLED } from '@/consts'
 import { clearAllAuthCache, getAuthToken as getToken, hasAuth as checkAuth, getPemFromCache, savePemToCache } from '@/lib/auth'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 interface AuthStore {
@@ -14,7 +15,7 @@ interface AuthStore {
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
-	isAuth: false,
+	isAuth: LOCAL_SAVE_ENABLED,
 	privateKey: null,
 
 	setPrivateKey: async (key: string) => {

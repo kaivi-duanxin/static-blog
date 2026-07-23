@@ -1,10 +1,29 @@
 'use client'
 
 import { useAuthStore } from '@/hooks/use-auth'
+import { LOCAL_SAVE_ENABLED } from '@/consts'
 import { KJUR, KEYUTIL } from 'jsrsasign'
 import { toast } from 'sonner'
 
 export const GH_API = 'https://api.github.com'
+
+let localBlobId = 0
+const localBlobStore = new Map<string, { content: string; encoding: 'utf-8' | 'base64' }>()
+
+async function callLocalSave<T>(body: unknown): Promise<T> {
+	const res = await fetch('/api/local-save', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(body)
+	})
+
+	if (!res.ok) {
+		const data = await res.json().catch(() => null)
+		throw new Error(data?.error || `local save failed: ${res.status}`)
+	}
+
+	return res.json()
+}
 
 function handle401Error(): void {
 	if (typeof sessionStorage === 'undefined') return
@@ -32,6 +51,8 @@ export function signAppJwt(appId: string, privateKeyPem: string): string {
 }
 
 export async function getInstallationId(jwt: string, owner: string, repo: string): Promise<number> {
+	if (LOCAL_SAVE_ENABLED) return 0
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/installation`, {
 		headers: {
 			Authorization: `Bearer ${jwt}`,
@@ -47,6 +68,8 @@ export async function getInstallationId(jwt: string, owner: string, repo: string
 }
 
 export async function createInstallationToken(jwt: string, installationId: number): Promise<string> {
+	if (LOCAL_SAVE_ENABLED) return 'local-save-token'
+
 	const res = await fetch(`${GH_API}/app/installations/${installationId}/access_tokens`, {
 		method: 'POST',
 		headers: {
@@ -63,6 +86,8 @@ export async function createInstallationToken(jwt: string, installationId: numbe
 }
 
 export async function getFileSha(token: string, owner: string, repo: string, path: string, branch: string): Promise<string | undefined> {
+	if (LOCAL_SAVE_ENABLED) return undefined
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -79,6 +104,11 @@ export async function getFileSha(token: string, owner: string, repo: string, pat
 }
 
 export async function putFile(token: string, owner: string, repo: string, path: string, contentBase64: string, message: string, branch: string) {
+	if (LOCAL_SAVE_ENABLED) {
+		await callLocalSave({ action: 'writeFile', item: { path, content: contentBase64, encoding: 'base64' } })
+		return { local: true }
+	}
+
 	const sha = await getFileSha(token, owner, repo, path, branch)
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
 		method: 'PUT',
@@ -99,6 +129,8 @@ export async function putFile(token: string, owner: string, repo: string, path: 
 // Batch commit APIs
 
 export async function getRef(token: string, owner: string, repo: string, ref: string): Promise<{ sha: string }> {
+	if (LOCAL_SAVE_ENABLED) return { sha: 'local-save-ref' }
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -122,6 +154,23 @@ export type TreeItem = {
 }
 
 export async function createTree(token: string, owner: string, repo: string, tree: TreeItem[], baseTree?: string): Promise<{ sha: string }> {
+	if (LOCAL_SAVE_ENABLED) {
+		const items = tree.map(item => {
+			if (item.sha === null) return { path: item.path, delete: true }
+
+			if (item.sha) {
+				const blob = localBlobStore.get(item.sha)
+				if (!blob) throw new Error(`Missing local blob: ${item.sha}`)
+				return { path: item.path, content: blob.content, encoding: blob.encoding }
+			}
+
+			return { path: item.path, content: item.content || '', encoding: 'utf-8' }
+		})
+
+		await callLocalSave({ action: 'batchWrite', items })
+		return { sha: `local-tree-${Date.now()}` }
+	}
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/trees`, {
 		method: 'POST',
 		headers: {
@@ -140,6 +189,8 @@ export async function createTree(token: string, owner: string, repo: string, tre
 }
 
 export async function createCommit(token: string, owner: string, repo: string, message: string, tree: string, parents: string[]): Promise<{ sha: string }> {
+	if (LOCAL_SAVE_ENABLED) return { sha: `local-commit-${Date.now()}` }
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/commits`, {
 		method: 'POST',
 		headers: {
@@ -158,6 +209,8 @@ export async function createCommit(token: string, owner: string, repo: string, m
 }
 
 export async function updateRef(token: string, owner: string, repo: string, ref: string, sha: string, force = false): Promise<void> {
+	if (LOCAL_SAVE_ENABLED) return
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/refs/${encodeURIComponent(ref)}`, {
 		method: 'PATCH',
 		headers: {
@@ -174,6 +227,11 @@ export async function updateRef(token: string, owner: string, repo: string, ref:
 }
 
 export async function readTextFileFromRepo(token: string, owner: string, repo: string, path: string, ref: string): Promise<string | null> {
+	if (LOCAL_SAVE_ENABLED) {
+		const data = await callLocalSave<{ content: string | null }>({ action: 'readFile', path })
+		return data.content
+	}
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -195,6 +253,11 @@ export async function readTextFileFromRepo(token: string, owner: string, repo: s
 }
 
 export async function listRepoFilesRecursive(token: string, owner: string, repo: string, path: string, ref: string): Promise<string[]> {
+	if (LOCAL_SAVE_ENABLED) {
+		const data = await callLocalSave<{ files: string[] }>({ action: 'listFiles', path })
+		return data.files
+	}
+
 	async function fetchPath(targetPath: string): Promise<string[]> {
 		const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(targetPath)}?ref=${encodeURIComponent(ref)}`, {
 			headers: {
@@ -235,6 +298,12 @@ export async function createBlob(
 	content: string,
 	encoding: 'utf-8' | 'base64' = 'base64'
 ): Promise<{ sha: string }> {
+	if (LOCAL_SAVE_ENABLED) {
+		const sha = `local-blob-${++localBlobId}`
+		localBlobStore.set(sha, { content, encoding })
+		return { sha }
+	}
+
 	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/blobs`, {
 		method: 'POST',
 		headers: {
