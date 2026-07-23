@@ -1,5 +1,5 @@
 import { createInstallationToken, getInstallationId, signAppJwt } from './github-client'
-import { GITHUB_CONFIG } from '@/consts'
+import { GITHUB_CONFIG, LOCAL_SAVE_ENABLED } from '@/consts'
 import { useAuthStore } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 import { decrypt,encrypt } from './aes256-util'
@@ -72,6 +72,7 @@ export function clearAllAuthCache(): void {
 }
 
 export async function hasAuth(): Promise<boolean> {
+	if (LOCAL_SAVE_ENABLED) return true
 	return !!getTokenFromCache() || !!(await getPemFromCache())
 }
 
@@ -81,6 +82,8 @@ export async function hasAuth(): Promise<boolean> {
  * @returns GitHub Installation Token
  */
 export async function getAuthToken(): Promise<string> {
+	if (LOCAL_SAVE_ENABLED) return 'local-save-token'
+
 	// 1. 先尝试从缓存获取 token
 	const cachedToken = getTokenFromCache()
 	if (cachedToken) {
