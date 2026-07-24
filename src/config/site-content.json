@@ -21,19 +21,23 @@
 	],
 	"artImages": [
 		{
-			"id": "cat",
-			"url": "/images/art/cat.png"
+			"id": "raiden-home-20260724",
+			"url": "/images/art/raiden-home-20260724.jpg"
 		},
 		{
-			"id": "a46372ff45bc5524",
-			"url": "/images/art/a46372ff45bc5524.jpg"
+			"id": "bc428679b980828e",
+			"url": "/images/art/bc428679b980828e.png"
 		},
 		{
-			"id": "1c7b726fe720679b",
-			"url": "/images/art/1c7b726fe720679b.jpg"
+			"id": "3539afae77cf82cd",
+			"url": "/images/art/3539afae77cf82cd.png"
+		},
+		{
+			"id": "24b124e8ea847854",
+			"url": "/images/art/24b124e8ea847854.jpg"
 		}
 	],
-	"currentArtImageId": "1c7b726fe720679b",
+	"currentArtImageId": "24b124e8ea847854",
 	"backgroundImages": [
 		{
 			"id": "",
@@ -92,6 +96,16 @@
 				"id": "空山新雨后",
 				"title": "空山新雨后",
 				"url": "/music/空山新雨后.mp3"
+			},
+			{
+				"id": "4d8166e8bdd1d9e6",
+				"title": "红昭愿",
+				"url": "/music/红昭愿.mp3"
+			},
+			{
+				"id": "9797328fba94729c",
+				"title": "知我",
+				"url": "/music/知我.mp3"
 			}
 		]
 	}

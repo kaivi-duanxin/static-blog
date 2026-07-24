@@ -1,5 +1,10 @@
 {
-  "categories": [
-    "aa"
-  ]
+	"categories": [
+		"aa",
+		"docker",
+		"JumpLink",
+		"K8S",
+		"Sums",
+		"Tech"
+	]
 }
