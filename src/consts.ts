@@ -9,8 +9,8 @@ export const LOCAL_SAVE_ENABLED = process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true'
  * GitHub 仓库配置
  */
 export const GITHUB_CONFIG = {
-	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'yysuni',
-	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || '2025-blog-public',
+	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'kaivi-duanxin',
+	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || 'static-blog',
 	BRANCH: process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main',
 	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-',
 	ENCRYPT_KEY: process.env.NEXT_PUBLIC_GITHUB_ENCRYPT_KEY || 'wudishiduomejimo',

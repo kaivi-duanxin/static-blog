@@ -1,7 +1,7 @@
 {
 	"meta": {
 		"title": "Kaivi",
-		"description": "KaiKaiLi",
+		"description": "KaiKaiLi Dreamtech picture presentation",
 		"username": "KaiKaiLi"
 	},
 	"theme": {
@@ -69,11 +69,30 @@
 	"isCachePem": false,
 	"hideEditButton": false,
 	"enableCategories": true,
-	"currentHatIndex": 6,
+	"currentHatIndex": 8,
 	"hatFlipped": false,
 	"enableChristmas": false,
 	"beian": {
 		"text": "",
 		"link": ""
+	},
+	"likeSettings": {
+		"baseCount": 521
+	},
+	"musicPlayer": {
+		"label": "music",
+		"random": true,
+		"tracks": [
+			{
+				"id": "吹梦到西洲",
+				"title": "吹梦到西洲",
+				"url": "/music/吹梦到西洲.mp3"
+			},
+			{
+				"id": "空山新雨后",
+				"title": "空山新雨后",
+				"url": "/music/空山新雨后.mp3"
+			}
+		]
 	}
 }

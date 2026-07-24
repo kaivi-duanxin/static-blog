@@ -12,7 +12,24 @@ import { Pause } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
-const MUSIC_FILES = ['/music/close-to-you.mp3']
+type MusicTrack = {
+	id?: string
+	title?: string
+	url: string
+}
+
+const DEFAULT_MUSIC_LABEL = 'music'
+const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
+	{ id: '吹梦到西洲', title: '吹梦到西洲', url: '/music/吹梦到西洲.mp3' },
+	{ id: '空山新雨后', title: '空山新雨后', url: '/music/空山新雨后.mp3' }
+]
+
+const getRandomMusicIndex = (length: number, excludeIndex?: number) => {
+	if (length <= 0) return 0
+	const candidates = Array.from({ length }, (_, index) => index).filter((index) => index !== excludeIndex)
+	const playableIndexes = candidates.length > 0 ? candidates : [0]
+	return playableIndexes[Math.floor(Math.random() * playableIndexes.length)]
+}
 
 export default function MusicCard() {
 	const pathname = usePathname()
@@ -22,12 +39,21 @@ export default function MusicCard() {
 	const hiCardStyles = cardStyles.hiCard
 	const clockCardStyles = cardStyles.clockCard
 	const calendarCardStyles = cardStyles.calendarCard
+	const musicPlayer = (siteContent.musicPlayer ?? {}) as { label?: string; random?: boolean; tracks?: MusicTrack[] }
+	const musicLabel = musicPlayer.label || DEFAULT_MUSIC_LABEL
+	const musicTracks = useMemo(() => {
+		const tracks = (musicPlayer.tracks ?? []).filter(track => track.url)
+		return tracks.length > 0 ? tracks : DEFAULT_MUSIC_TRACKS
+	}, [musicPlayer.tracks])
+	const musicFiles = useMemo(() => musicTracks.map(track => track.url), [musicTracks])
+	const randomPlayback = musicPlayer.random !== false
 
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [progress, setProgress] = useState(0)
 	const audioRef = useRef<HTMLAudioElement | null>(null)
-	const currentIndexRef = useRef(0)
+	const currentIndexRef = useRef(currentIndex)
+	const isPlayingRef = useRef(false)
 
 	const isHomePage = pathname === '/'
 
@@ -64,7 +90,7 @@ export default function MusicCard() {
 		}
 
 		const handleEnded = () => {
-			const nextIndex = (currentIndexRef.current + 1) % MUSIC_FILES.length
+			const nextIndex = randomPlayback ? getRandomMusicIndex(musicFiles.length, currentIndexRef.current) : (currentIndexRef.current + 1) % musicFiles.length
 			currentIndexRef.current = nextIndex
 			setCurrentIndex(nextIndex)
 			setProgress(0)
@@ -87,26 +113,33 @@ export default function MusicCard() {
 			audio.removeEventListener('ended', handleEnded)
 			audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
 		}
-	}, [])
+	}, [musicFiles.length, randomPlayback])
+
+	useEffect(() => {
+		const nextIndex = randomPlayback ? getRandomMusicIndex(musicFiles.length, currentIndexRef.current) : 0
+		currentIndexRef.current = nextIndex
+		setCurrentIndex(nextIndex)
+	}, [musicFiles, randomPlayback])
 
 	// Handle currentIndex change - load new audio
 	useEffect(() => {
 		currentIndexRef.current = currentIndex
-		if (audioRef.current) {
-			const wasPlaying = !audioRef.current.paused
+		if (audioRef.current && musicFiles[currentIndex]) {
+			const shouldPlay = isPlayingRef.current
 			audioRef.current.pause()
-			audioRef.current.src = MUSIC_FILES[currentIndex]
+			audioRef.current.src = musicFiles[currentIndex]
 			audioRef.current.loop = false
 			setProgress(0)
 
-			if (wasPlaying) {
+			if (shouldPlay) {
 				audioRef.current.play().catch(console.error)
 			}
 		}
-	}, [currentIndex])
+	}, [currentIndex, musicFiles])
 
 	// Handle play/pause state change
 	useEffect(() => {
+		isPlayingRef.current = isPlaying
 		if (!audioRef.current) return
 
 		if (isPlaying) {
@@ -158,7 +191,7 @@ export default function MusicCard() {
 				<MusicSVG className='h-8 w-8' />
 
 				<div className='flex-1'>
-					<div className='text-secondary text-sm'>Close To You</div>
+					<div className='text-secondary text-sm'>{musicLabel}</div>
 
 					<div className='mt-1 h-2 rounded-full bg-white/60'>
 						<div className='bg-linear h-full rounded-full transition-all duration-300' style={{ width: `${progress}%` }} />

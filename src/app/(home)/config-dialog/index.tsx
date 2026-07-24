@@ -8,7 +8,7 @@ import { useAuthStore } from '@/hooks/use-auth'
 import { useConfigStore } from '../stores/config-store'
 import { pushSiteContent } from '../services/push-site-content'
 import type { SiteContent, CardStyles } from '../stores/config-store'
-import { SiteSettings, type FileItem, type ArtImageUploads, type BackgroundImageUploads, type SocialButtonImageUploads } from './site-settings'
+import { SiteSettings, type FileItem, type ArtImageUploads, type BackgroundImageUploads, type MusicUploads, type SocialButtonImageUploads } from './site-settings'
 import { ColorConfig } from './color-config'
 import { HomeLayout } from './home-layout'
 
@@ -34,6 +34,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 	const [artImageUploads, setArtImageUploads] = useState<ArtImageUploads>({})
 	const [backgroundImageUploads, setBackgroundImageUploads] = useState<BackgroundImageUploads>({})
 	const [socialButtonImageUploads, setSocialButtonImageUploads] = useState<SocialButtonImageUploads>({})
+	const [musicUploads, setMusicUploads] = useState<MusicUploads>({})
 
 	useEffect(() => {
 		if (open) {
@@ -48,6 +49,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 			setArtImageUploads({})
 			setBackgroundImageUploads({})
 			setSocialButtonImageUploads({})
+			setMusicUploads({})
 			setActiveTab('site')
 		}
 	}, [open, siteContent, cardStyles])
@@ -76,8 +78,13 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 					URL.revokeObjectURL(item.previewUrl)
 				}
 			})
+			Object.values(musicUploads).forEach(item => {
+				if (item.type === 'file') {
+					URL.revokeObjectURL(item.previewUrl)
+				}
+			})
 		}
-	}, [faviconItem, avatarItem, artImageUploads, backgroundImageUploads, socialButtonImageUploads])
+	}, [faviconItem, avatarItem, artImageUploads, backgroundImageUploads, socialButtonImageUploads, musicUploads])
 
 	const handleChoosePrivateKey = async (file: File) => {
 		try {
@@ -120,7 +127,8 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 				removedArtImages,
 				backgroundImageUploads,
 				removedBackgroundImages,
-				socialButtonImageUploads
+				socialButtonImageUploads,
+				musicUploads
 			)
 			setSiteContent(formData)
 			setCardStyles(cardStylesData)
@@ -130,6 +138,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 			setArtImageUploads({})
 			setBackgroundImageUploads({})
 			setSocialButtonImageUploads({})
+			setMusicUploads({})
 			onClose()
 		} catch (error: any) {
 			console.error('Failed to save:', error)
@@ -162,6 +171,11 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 				URL.revokeObjectURL(item.previewUrl)
 			}
 		})
+		Object.values(musicUploads).forEach(item => {
+			if (item.type === 'file') {
+				URL.revokeObjectURL(item.previewUrl)
+			}
+		})
 		// Restore to the state when dialog was opened
 		setSiteContent(originalData)
 		setCardStyles(originalCardStyles)
@@ -180,6 +194,7 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 		setArtImageUploads({})
 		setBackgroundImageUploads({})
 		setSocialButtonImageUploads({})
+		setMusicUploads({})
 		onClose()
 	}
 
@@ -293,6 +308,8 @@ export default function ConfigDialog({ open, onClose }: ConfigDialogProps) {
 							setBackgroundImageUploads={setBackgroundImageUploads}
 							socialButtonImageUploads={socialButtonImageUploads}
 							setSocialButtonImageUploads={setSocialButtonImageUploads}
+							musicUploads={musicUploads}
+							setMusicUploads={setMusicUploads}
 						/>
 					)}
 					{activeTab === 'color' && <ColorConfig formData={formData} setFormData={setFormData} />}
