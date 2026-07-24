@@ -1,7 +1,7 @@
 'use client'
 
 import type { SiteContent } from '../../stores/config-store'
-import type { ArtImageUploads, BackgroundImageUploads, FileItem, SocialButtonImageUploads } from './types'
+import type { ArtImageUploads, BackgroundImageUploads, FileItem, MusicUploads, SocialButtonImageUploads } from './types'
 import { FaviconAvatarUpload } from './favicon-avatar-upload'
 import { SiteMetaForm } from './site-meta-form'
 import { ArtImagesSection } from './art-images-section'
@@ -9,8 +9,10 @@ import { BackgroundImagesSection } from './background-images-section'
 import { SocialButtonsSection } from './social-buttons-section'
 import { HatSection } from './hat-section'
 import { BeianForm } from './beian-form'
+import { LikeSettingsSection } from './like-settings-section'
+import { MusicSettingsSection } from './music-settings-section'
 
-export type { FileItem, ArtImageUploads, BackgroundImageUploads, SocialButtonImageUploads } from './types'
+export type { FileItem, ArtImageUploads, BackgroundImageUploads, MusicUploads, SocialButtonImageUploads } from './types'
 
 interface SiteSettingsProps {
 	formData: SiteContent
@@ -25,6 +27,8 @@ interface SiteSettingsProps {
 	setBackgroundImageUploads: React.Dispatch<React.SetStateAction<BackgroundImageUploads>>
 	socialButtonImageUploads: SocialButtonImageUploads
 	setSocialButtonImageUploads: React.Dispatch<React.SetStateAction<SocialButtonImageUploads>>
+	musicUploads: MusicUploads
+	setMusicUploads: React.Dispatch<React.SetStateAction<MusicUploads>>
 }
 
 export function SiteSettings({
@@ -39,7 +43,9 @@ export function SiteSettings({
 	backgroundImageUploads,
 	setBackgroundImageUploads,
 	socialButtonImageUploads,
-	setSocialButtonImageUploads
+	setSocialButtonImageUploads,
+	musicUploads,
+	setMusicUploads
 }: SiteSettingsProps) {
 	return (
 		<div className='space-y-6'>
@@ -48,6 +54,10 @@ export function SiteSettings({
 			<SiteMetaForm formData={formData} setFormData={setFormData} />
 
 			<BeianForm formData={formData} setFormData={setFormData} />
+
+			<LikeSettingsSection formData={formData} setFormData={setFormData} />
+
+			<MusicSettingsSection formData={formData} setFormData={setFormData} musicUploads={musicUploads} setMusicUploads={setMusicUploads} />
 
 			<SocialButtonsSection
 				formData={formData}

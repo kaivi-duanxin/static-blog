@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { BLOG_SLUG_KEY } from '@/consts'
+import { useConfigStore } from '@/app/(home)/stores/config-store'
 
 type LikeButtonProps = {
 	slug?: string
@@ -13,10 +14,30 @@ type LikeButtonProps = {
 	delay?: number
 }
 
-const ENDPOINT = 'https://blog-liker.yysuni1001.workers.dev/api/like'
+const ENDPOINT = '/api/likes'
+const MAX_LOCAL_LIKES = 5
 
-export default function LikeButton({ slug = 'yysuni', delay, className }: LikeButtonProps) {
+function getLocalLikeKey(slug: string) {
+	return `kaivi-like-count:${slug}`
+}
+
+function getLocalLikeUsage(slug: string) {
+	if (typeof window === 'undefined') return 0
+	const value = window.localStorage.getItem(getLocalLikeKey(slug))
+	const count = Number(value)
+	return Number.isFinite(count) ? count : 0
+}
+
+function setLocalLikeUsage(slug: string, count: number) {
+	if (typeof window === 'undefined') return
+	window.localStorage.setItem(getLocalLikeKey(slug), String(Math.max(0, count)))
+}
+
+export default function LikeButton({ slug = 'home', delay, className }: LikeButtonProps) {
 	slug = BLOG_SLUG_KEY + slug
+	const { siteContent } = useConfigStore()
+	const likeSettings = (siteContent.likeSettings ?? {}) as { baseCount?: number }
+	const baseCount = typeof likeSettings.baseCount === 'number' ? likeSettings.baseCount : 520
 	const [liked, setLiked] = useState(false)
 	const [show, setShow] = useState(false)
 	const [justLiked, setJustLiked] = useState(false)
@@ -44,11 +65,21 @@ export default function LikeButton({ slug = 'yysuni', delay, className }: LikeBu
 
 	const { data: fetchedCount, mutate } = useSWR(slug ? `${ENDPOINT}?slug=${encodeURIComponent(slug)}` : null, fetcher, {
 		revalidateOnFocus: false,
-		dedupingInterval: 1000 * 10
+		dedupingInterval: 1000 * 10,
+		fallbackData: baseCount
 	})
 
 	const handleLike = useCallback(async () => {
 		if (!slug) return
+		const currentUsage = getLocalLikeUsage(slug)
+		if (currentUsage >= MAX_LOCAL_LIKES) {
+			toast('今天已经点赞 5 次啦，先留一点喜欢给明天')
+			return
+		}
+
+		const optimisticCount = (typeof fetchedCount === 'number' ? fetchedCount : baseCount) + 1
+		setLocalLikeUsage(slug, currentUsage + 1)
+		await mutate(optimisticCount, { revalidate: false })
 		setLiked(true)
 		setJustLiked(true)
 
@@ -63,19 +94,23 @@ export default function LikeButton({ slug = 'yysuni', delay, className }: LikeBu
 		// Clear particles after animation
 		setTimeout(() => setParticles([]), 1000)
 
-		try {
+		void (async () => {
 			const url = `${ENDPOINT}?slug=${encodeURIComponent(slug)}`
 			const res = await fetch(url, { method: 'POST' })
 			const data = await res.json().catch(() => ({}))
 			if (data.reason == 'rate_limited') toast('谢谢啦😘，今天已经不能再点赞啦💕')
-			const value = typeof data?.count === 'number' ? data.count : (fetchedCount ?? 0) + 1
-			await mutate(value, { revalidate: false })
-		} catch {
-			// ignore
-		}
-	}, [slug, fetchedCount, mutate])
+			if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
 
-	const count = typeof fetchedCount === 'number' ? fetchedCount : null
+			if (typeof data?.count === 'number') {
+				await mutate(data.count, { revalidate: false })
+			}
+		})().catch(error => {
+			console.error('Failed to sync like:', error)
+			toast.error('点赞已显示，数据库同步稍后再试')
+		})
+	}, [slug, fetchedCount, baseCount, mutate])
+
+	const count = typeof fetchedCount === 'number' ? fetchedCount : baseCount
 
 	if (show)
 		return (
