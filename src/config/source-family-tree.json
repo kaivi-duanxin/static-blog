@@ -245,6 +245,9 @@
 			"parents": [
 				"g6-fuyu",
 				"g6-spouse"
+			],
+			"partnerIds": [
+				"person-1785319927741-jrpswo"
 			]
 		},
 		{
@@ -362,6 +365,15 @@
 			],
 			"note": "最美长公主",
 			"photo": "/images/source/person-1785309941271-rldm4r-1785311185200-34.jpg"
+		},
+		{
+			"id": "person-1785319927741-jrpswo",
+			"name": "李晓燕",
+			"gender": "female",
+			"generation": 7,
+			"partnerIds": [
+				"g7-shiping"
+			]
 		}
 	],
 	"positions": {
@@ -498,7 +510,7 @@
 			"y": 1228
 		},
 		"g8-fengjie": {
-			"x": 458,
+			"x": 489,
 			"y": 1228
 		},
 		"person-1785309941271-rldm4r": {
@@ -508,6 +520,10 @@
 		"g3-spouse": {
 			"x": 577,
 			"y": 388
+		},
+		"person-1785319927741-jrpswo": {
+			"x": 522,
+			"y": 1060
 		}
 	},
 	"linkMiddles": {}
