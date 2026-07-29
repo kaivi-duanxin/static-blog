@@ -59,7 +59,7 @@
 ### 0629
 #### Engineering-department-weekly-meeting matting-containerization codex-api-token World-Cup-Knockout-Round Genshin-NTE 
 ### 0630
-#### codex-matting-containerization WIFI-mesh-F-return-goods Cousin-meal-reservation Genshin-update-Sandrone
+#### codex-matting-containerization WIFI-mesh-F-return-goods Cousin-meal-reservation Genshin-update-Sandrone Kaivi
 ```
 
 # 记忆碎片
