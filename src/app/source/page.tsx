@@ -20,6 +20,9 @@ import {
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import sourceTreeConfig from '@/config/source-family-tree.json'
+import { useAuthStore } from '@/hooks/use-auth'
+import { readFileAsText } from '@/lib/file-utils'
+import { pushSourceTree, resetSourceTree } from './services/push-source-tree'
 import { sourcePeople, type SourcePerson } from './data'
 
 	type EditablePerson = SourcePerson & { photo?: string }
@@ -28,8 +31,6 @@ import { sourcePeople, type SourcePerson } from './data'
 	type EditorDraft = { name: string; note: string; photo: string; gender: SourcePerson['gender'] }
 type EditingSnapshot = { people: EditablePerson[]; positions: Record<string, Position>; linkMiddles: Record<string, number> }
 
-const SOURCE_TREE_CONFIG_PATH = 'src/config/source-family-tree.json'
-const SOURCE_IMAGE_DIRECTORY = 'public/images/source'
 const LEGACY_STORAGE_KEY = 'source-family-tree-v1'
 const CANVAS_WIDTH = 1280
 const CANVAS_HEIGHT = 1520
@@ -40,64 +41,6 @@ const COLUMN_GAP = 46
 
 const maleCardClass = 'bg-[#075a7b] text-white shadow-[0_12px_26px_rgba(7,90,123,0.18)]'
 const femaleCardClass = 'bg-[#c09a7f] text-white shadow-[0_12px_26px_rgba(192,154,127,0.18)]'
-
-function getPhotoData(photo: string) {
-	const match = photo.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/)
-	return match ? { mimeType: match[1], base64: match[2] } : null
-}
-
-function getPhotoExtension(mimeType: string) {
-	if (mimeType === 'image/jpeg') return 'jpg'
-	if (mimeType === 'image/svg+xml') return 'svg'
-	return mimeType.slice('image/'.length).replace(/[^a-z0-9]/gi, '') || 'png'
-}
-
-async function saveTreeState(snapshot: EditingSnapshot) {
-	const timestamp = Date.now()
-	const uploads: Array<{ path: string; content: string; encoding: 'base64' }> = []
-	const people = snapshot.people.map((person, index) => {
-		const photoData = person.photo ? getPhotoData(person.photo) : null
-		if (!photoData) return person
-
-		const filename = `${person.id.replace(/[^a-z0-9-]/gi, '-')}-${timestamp}-${index}.${getPhotoExtension(photoData.mimeType)}`
-		const path = `${SOURCE_IMAGE_DIRECTORY}/${filename}`
-		uploads.push({ path, content: photoData.base64, encoding: 'base64' })
-		return { ...person, photo: path.replace(/^public/, '') }
-	})
-	const savedTree: EditingSnapshot = { ...snapshot, people }
-	const response = await fetch('/api/local-save', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			action: 'batchWrite',
-			items: [
-				...uploads,
-				{ path: SOURCE_TREE_CONFIG_PATH, content: JSON.stringify(savedTree, null, '\t'), encoding: 'utf-8' }
-			]
-		})
-	})
-	if (!response.ok) {
-		const body = (await response.json().catch(() => null)) as { error?: string } | null
-		throw new Error(body?.error ?? 'Local family tree save failed.')
-	}
-
-	return savedTree
-}
-
-async function clearSavedTree() {
-	const response = await fetch('/api/local-save', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			action: 'batchWrite',
-			items: [
-				{ path: SOURCE_TREE_CONFIG_PATH, content: '{}\n', encoding: 'utf-8' },
-				{ path: SOURCE_IMAGE_DIRECTORY, delete: true }
-			]
-		})
-	})
-	if (!response.ok) throw new Error('Local family tree reset failed.')
-}
 
 function getChildren(person: EditablePerson, people: EditablePerson[]) {
 	const relationIds = new Set([person.id, ...(person.partnerIds ?? [])])
@@ -214,8 +157,11 @@ export default function SourcePage() {
 	const [profileId, setProfileId] = useState<string | null>(null)
 	const [editorDraft, setEditorDraft] = useState<EditorDraft>({ name: '', note: '', photo: '', gender: 'male' })
 	const [alignmentGuide, setAlignmentGuide] = useState<{ x: number; fromY: number; toY: number } | null>(null)
+	const [isSaving, setIsSaving] = useState(false)
+	const { isAuth, setPrivateKey } = useAuthStore()
 	const viewportRef = useRef<HTMLDivElement>(null)
 	const photoInputRef = useRef<HTMLInputElement>(null)
+	const keyInputRef = useRef<HTMLInputElement>(null)
 	const dragRef = useRef({ kind: 'canvas' as 'canvas' | 'person' | 'link', id: '', startX: 0, startY: 0, panX: 0, panY: 0, x: 0, y: 0, lockedY: 0, middleY: 0 })
 	const suppressClickUntilRef = useRef(0)
 
@@ -240,7 +186,7 @@ export default function SourcePage() {
 				setLinkMiddles(legacyTree.linkMiddles)
 				setSelectedId(legacyTree.people.some(person => person.id === 'g8-kai') ? 'g8-kai' : legacyTree.people[0].id)
 
-				const savedTree = await saveTreeState(legacyTree)
+				const savedTree = await pushSourceTree(legacyTree)
 				setPeople(savedTree.people)
 				setPositions(savedTree.positions)
 				setLinkMiddles(savedTree.linkMiddles)
@@ -458,22 +404,30 @@ export default function SourcePage() {
 	}
 
 	const beginEditing = () => {
+		if (!isAuth) {
+			keyInputRef.current?.click()
+			return
+		}
 		setProfileId(null)
 		setSnapshot({ people: structuredClone(people), positions: structuredClone(positions), linkMiddles: structuredClone(linkMiddles) })
 		setEditing(true)
 	}
 
 	const saveEditing = async () => {
+		if (isSaving) return
 		try {
-			const savedTree = await saveTreeState({ people, positions, linkMiddles })
+			setIsSaving(true)
+			const savedTree = await pushSourceTree({ people, positions, linkMiddles })
 			setPeople(savedTree.people)
 			setPositions(savedTree.positions)
 			setLinkMiddles(savedTree.linkMiddles)
 			setSnapshot(null)
 			setEditing(false)
 		} catch (error) {
-			console.error('Failed to save family tree edits locally:', error)
-			window.alert('本地保存失败，请确认当前运行的是开发分支，并检查终端错误信息。')
+			console.error('Failed to save family tree edits:', error)
+			window.alert(error instanceof Error ? error.message : '族谱保存失败，请确认已导入 GitHub 密钥后重试。')
+		} finally {
+			setIsSaving(false)
 		}
 	}
 
@@ -489,15 +443,37 @@ export default function SourcePage() {
 	}
 
 	const resetSavedTree = async () => {
+		if (!isAuth) {
+			keyInputRef.current?.click()
+			return
+		}
+		if (!window.confirm('确认恢复初始族谱吗？已上传的人物照片也会一并删除。')) return
 		try {
-			await clearSavedTree()
+			setIsSaving(true)
+			const resetTree = { people: sourcePeople, positions: buildDefaultPositions(sourcePeople), linkMiddles: {} }
+			await resetSourceTree(resetTree)
 			setPeople(sourcePeople)
-			setPositions(buildDefaultPositions(sourcePeople))
+			setPositions(resetTree.positions)
 			setLinkMiddles({})
 			setSelectedId('g8-kai')
 		} catch (error) {
-			console.error('Failed to reset local family tree:', error)
-			window.alert('恢复初始族谱失败，请检查终端错误信息。')
+			console.error('Failed to reset family tree:', error)
+			window.alert(error instanceof Error ? error.message : '恢复初始族谱失败，请确认已导入 GitHub 密钥后重试。')
+		} finally {
+			setIsSaving(false)
+		}
+	}
+
+	const handlePrivateKeyChange: React.ChangeEventHandler<HTMLInputElement> = async event => {
+		const file = event.target.files?.[0]
+		if (!file) return
+		try {
+			setPrivateKey(await readFileAsText(file))
+		} catch (error) {
+			console.error('Failed to import GitHub private key:', error)
+			window.alert('GitHub 密钥导入失败，请选择有效的 .pem 文件。')
+		} finally {
+			event.currentTarget.value = ''
 		}
 	}
 
@@ -626,6 +602,7 @@ export default function SourcePage() {
 
 	return (
 		<div className='min-h-screen px-6 pt-28 pb-10 max-lg:px-4'>
+			<input ref={keyInputRef} type='file' accept='.pem' className='hidden' onChange={handlePrivateKeyChange} />
 			<div className='mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_400px] gap-5 max-xl:grid-cols-1'>
 				<section className='overflow-hidden rounded-md border border-[#dce7ea] bg-[#f7faf8]/86 shadow-[0_18px_70px_rgba(30,63,72,0.12)] backdrop-blur'>
 					<div className='flex flex-wrap items-center justify-between gap-3 border-b border-[#dce7ea] bg-white/78 px-4 py-3'>
@@ -641,28 +618,28 @@ export default function SourcePage() {
 						<div className='flex items-center gap-2'>
 							{editing ? (
 								<>
-									<button type='button' onClick={() => addRelative('parent')} disabled={selected.generation <= 1} title='新增上一代人物' className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d] disabled:cursor-not-allowed disabled:opacity-45'>
+									<button type='button' onClick={() => addRelative('parent')} disabled={isSaving || selected.generation <= 1} title='新增上一代人物' className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d] disabled:cursor-not-allowed disabled:opacity-45'>
 										<ArrowUpIcon className='size-4' /> 上一代
 									</button>
-									<button type='button' onClick={() => addRelative('child')} title='新增下一代人物' className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d]'>
+									<button type='button' onClick={() => addRelative('child')} disabled={isSaving} title='新增下一代人物' className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d] disabled:cursor-not-allowed disabled:opacity-45'>
 										<ArrowDownIcon className='size-4' /> 下一代
 									</button>
-									<button type='button' onClick={() => addPerson('male')} className='flex h-9 items-center gap-1 rounded-md border border-[#075a7b] bg-[#eaf4f7] px-3 text-sm text-[#075a7b]'>
+									<button type='button' onClick={() => addPerson('male')} disabled={isSaving} className='flex h-9 items-center gap-1 rounded-md border border-[#075a7b] bg-[#eaf4f7] px-3 text-sm text-[#075a7b] disabled:cursor-not-allowed disabled:opacity-45'>
 										<PlusIcon className='size-4' /> 男性
 									</button>
-									<button type='button' onClick={() => addPerson('female')} className='flex h-9 items-center gap-1 rounded-md border border-[#c09a7f] bg-[#fbf2eb] px-3 text-sm text-[#9d745a]'>
+									<button type='button' onClick={() => addPerson('female')} disabled={isSaving} className='flex h-9 items-center gap-1 rounded-md border border-[#c09a7f] bg-[#fbf2eb] px-3 text-sm text-[#9d745a] disabled:cursor-not-allowed disabled:opacity-45'>
 										<PlusIcon className='size-4' /> 女性
 									</button>
-									<button type='button' onClick={cancelEditing} className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d]'>
+									<button type='button' onClick={cancelEditing} disabled={isSaving} className='flex h-9 items-center gap-1 rounded-md border border-[#dce7ea] bg-white px-3 text-sm text-[#37535d] disabled:cursor-not-allowed disabled:opacity-50'>
 										<XIcon className='size-4' /> 取消
 									</button>
-									<button type='button' onClick={saveEditing} className='flex h-9 items-center gap-1 rounded-md bg-[#075a7b] px-3 text-sm text-white'>
+									<button type='button' onClick={saveEditing} disabled={isSaving} className='flex h-9 items-center gap-1 rounded-md bg-[#075a7b] px-3 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50'>
 										<SaveIcon className='size-4' /> 保存
 									</button>
 								</>
 							) : (
-								<button type='button' onClick={beginEditing} className='flex h-9 items-center gap-1 rounded-md bg-[#075a7b] px-3 text-sm text-white'>
-									<PencilIcon className='size-4' /> 编辑
+								<button type='button' onClick={beginEditing} disabled={isSaving} className='flex h-9 items-center gap-1 rounded-md bg-[#075a7b] px-3 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50'>
+									<PencilIcon className='size-4' /> {isAuth ? '编辑' : '导入密钥'}
 								</button>
 							)}
 							<button type='button' aria-label='缩小' onClick={() => setScale(value => Math.max(0.45, Number((value - 0.08).toFixed(2))))} className='grid size-9 place-items-center rounded-md border border-[#dce7ea] bg-white text-[#37535d] shadow-sm'>
@@ -756,7 +733,7 @@ export default function SourcePage() {
 					<RelationGroup title='上一代' people={parents} selectedId={selected.id} onSelect={selectPerson} />
 					<RelationGroup title='同一代' people={sameGeneration} selectedId={selected.id} onSelect={selectPerson} />
 					<RelationGroup title='下一代' people={children} selectedId={selected.id} onSelect={selectPerson} />
-					<button type='button' onClick={resetSavedTree} className='mt-4 flex h-9 items-center gap-1 text-xs text-[#718990] hover:text-[#075a7b]'>
+					<button type='button' onClick={resetSavedTree} disabled={isSaving} className='mt-4 flex h-9 items-center gap-1 text-xs text-[#718990] hover:text-[#075a7b] disabled:cursor-not-allowed disabled:opacity-50'>
 						<RotateCcwIcon className='size-3.5' /> 恢复初始族谱
 					</button>
 				</aside>
