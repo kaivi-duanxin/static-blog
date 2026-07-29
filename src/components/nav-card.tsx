@@ -4,6 +4,7 @@ import Card from '@/components/card'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
+import { HomeIcon } from 'lucide-react'
 import { useCenterStore } from '@/hooks/use-center'
 import { CARD_SPACING } from '@/consts'
 import ScrollOutlineSVG from '@/svgs/scroll-outline.svg'
@@ -16,6 +17,8 @@ import ShareFilledSVG from '@/svgs/share-filled.svg'
 import ShareOutlineSVG from '@/svgs/share-outline.svg'
 import WebsiteFilledSVG from '@/svgs/website-filled.svg'
 import WebsiteOutlineSVG from '@/svgs/website-outline.svg'
+import SourceFilledSVG from '@/svgs/source-filled.svg'
+import SourceOutlineSVG from '@/svgs/source-outline.svg'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import { cn } from '@/lib/utils'
@@ -24,6 +27,12 @@ import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { HomeDraggableLayer } from '@/app/(home)/home-draggable-layer'
 
 const list = [
+	{
+		icon: HomeIcon,
+		iconActive: HomeIcon,
+		label: '首页',
+		href: '/'
+	},
 	{
 		icon: ScrollOutlineSVG,
 		iconActive: ScrollFilledSVG,
@@ -53,6 +62,12 @@ const list = [
 		iconActive: WebsiteFilledSVG,
 		label: '优秀博客',
 		href: '/bloggers'
+	},
+	{
+		icon: SourceOutlineSVG,
+		iconActive: SourceFilledSVG,
+		label: '来源',
+		href: '/source'
 	}
 ]
 
@@ -101,9 +116,9 @@ export default function NavCard() {
 
 	const size = useMemo(() => {
 		if (form === 'mini') return { width: 64, height: 64 }
-		else if (form === 'icons') return { width: 340, height: 64 }
+		else if (form === 'icons') return { width: list.length * itemHeight + (list.length - 1) * 24 + 48, height: 64 }
 		else return { width: styles.width, height: styles.height }
-	}, [form, styles])
+	}, [form, itemHeight, styles])
 
 	useEffect(() => {
 		if (form === 'icons' && activeIndex !== undefined && hoveredIndex !== activeIndex) {
@@ -174,6 +189,8 @@ export default function NavCard() {
 									<Link
 										key={item.href}
 										href={item.href}
+										title={item.label}
+										aria-label={item.label}
 										className={cn('text-secondary text-md relative z-10 flex items-center gap-3 rounded-full px-5 py-3', form === 'icons' && 'p-0')}
 										onMouseEnter={() => setHoveredIndex(index)}>
 										<div className='flex h-7 w-7 items-center justify-center'>

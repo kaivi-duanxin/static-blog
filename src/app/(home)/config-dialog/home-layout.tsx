@@ -6,6 +6,7 @@ import { useLayoutEditStore } from '../stores/layout-edit-store'
 import cardStylesDefault from '@/config/card-styles-default.json'
 
 const CARD_LABELS: Record<string, string> = {
+	sourceCard: '来源',
 	artCard: '首图',
 	hiCard: '中心',
 	clockCard: '时钟',

@@ -11,14 +11,16 @@ import WriteButtons from '@/app/(home)/write-buttons'
 import LikePosition from './like-position'
 import HatCard from './hat-card'
 import BeianCard from './beian-card'
+import SourceCard from './source-card'
 import { useSize } from '@/hooks/use-size'
 import { motion } from 'motion/react'
 import { useLayoutEditStore } from './stores/layout-edit-store'
 import { useConfigStore } from './stores/config-store'
 import { toast } from 'sonner'
 import ConfigDialog from './config-dialog/index'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import SnowfallBackground from '@/layout/backgrounds/snowfall'
+import { pushCardStyles } from './services/push-site-content'
 
 export default function Home() {
 	const { maxSM } = useSize()
@@ -26,10 +28,22 @@ export default function Home() {
 	const editing = useLayoutEditStore(state => state.editing)
 	const saveEditing = useLayoutEditStore(state => state.saveEditing)
 	const cancelEditing = useLayoutEditStore(state => state.cancelEditing)
+	const [isSavingLayout, setIsSavingLayout] = useState(false)
 
-	const handleSave = () => {
-		saveEditing()
+	const handleSave = async () => {
+		if (isSavingLayout) return
+
+		setIsSavingLayout(true)
+		try {
+			await pushCardStyles(cardStyles)
+			saveEditing()
 		toast.success('首页布局偏移已保存（尚未提交到远程配置）')
+		} catch (error) {
+			console.error('Failed to save home layout:', error)
+			toast.error('Home layout save failed. Please try again.')
+		} finally {
+			setIsSavingLayout(false)
+		}
 	}
 
 	const handleCancel = () => {
@@ -65,10 +79,17 @@ export default function Home() {
 								whileHover={{ scale: 1.05 }}
 								whileTap={{ scale: 0.95 }}
 								onClick={handleCancel}
+								disabled={isSavingLayout}
 								className='rounded-xl border bg-white px-3 py-1 text-xs font-medium text-gray-700'>
 								取消
 							</motion.button>
-							<motion.button type='button' whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSave} className='brand-btn px-3 py-1 text-xs'>
+							<motion.button
+								type='button'
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								onClick={handleSave}
+								disabled={isSavingLayout}
+								className='brand-btn px-3 py-1 text-xs'>
 								保存偏移
 							</motion.button>
 						</div>
@@ -86,6 +107,7 @@ export default function Home() {
 				{cardStyles.articleCard?.enabled !== false && <AritcleCard />}
 				{!maxSM && cardStyles.writeButtons?.enabled !== false && <WriteButtons />}
 				{cardStyles.likePosition?.enabled !== false && <LikePosition />}
+				{!maxSM && cardStyles.sourceCard?.enabled !== false && <SourceCard />}
 				{cardStyles.hatCard?.enabled !== false && <HatCard />}
 				{cardStyles.beianCard?.enabled !== false && <BeianCard />}
 			</div>

@@ -1,0 +1,513 @@
+{
+	"people": [
+		{
+			"id": "g1-grandfather",
+			"name": "贵盛公",
+			"gender": "male",
+			"generation": 1,
+			"partnerIds": [
+				"g1-grandmother"
+			],
+			"note": "贵盛公之始"
+		},
+		{
+			"id": "g1-grandmother",
+			"name": "廖氏",
+			"gender": "female",
+			"generation": 1,
+			"partnerIds": [
+				"g1-grandfather"
+			]
+		},
+		{
+			"id": "g2-rongxiang",
+			"name": "李荣祥",
+			"gender": "male",
+			"generation": 2,
+			"parents": [
+				"g1-grandfather",
+				"g1-grandmother"
+			],
+			"partnerIds": [
+				"g2-spouse"
+			]
+		},
+		{
+			"id": "g2-spouse",
+			"name": "黄氏",
+			"gender": "female",
+			"generation": 2,
+			"partnerIds": [
+				"g2-rongxiang"
+			]
+		},
+		{
+			"id": "g2-ronghua",
+			"name": "李荣华",
+			"gender": "male",
+			"generation": 2,
+			"parents": [
+				"g1-grandfather",
+				"g1-grandmother"
+			]
+		},
+		{
+			"id": "g2-rongshu",
+			"name": "李荣禄",
+			"gender": "male",
+			"generation": 2,
+			"parents": [
+				"g1-grandfather",
+				"g1-grandmother"
+			]
+		},
+		{
+			"id": "g3-changjin",
+			"name": "李昌迪",
+			"gender": "male",
+			"generation": 3,
+			"parents": [
+				"g2-rongxiang",
+				"g2-spouse"
+			],
+			"partnerIds": [
+				"person-1785308469991-20oo4j"
+			]
+		},
+		{
+			"id": "g3-changda",
+			"name": "李昌达",
+			"gender": "male",
+			"generation": 3,
+			"parents": [
+				"g2-rongxiang",
+				"g2-spouse"
+			]
+		},
+		{
+			"id": "g3-changde",
+			"name": "李昌选",
+			"gender": "male",
+			"generation": 3,
+			"parents": [
+				"g2-rongxiang",
+				"g2-spouse"
+			]
+		},
+		{
+			"id": "g4-dazhun",
+			"name": "李大准",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			],
+			"partnerIds": [
+				"g4-spouse"
+			]
+		},
+		{
+			"id": "g4-spouse",
+			"name": "罗氏",
+			"gender": "female",
+			"generation": 4,
+			"partnerIds": [
+				"g4-dazhun"
+			]
+		},
+		{
+			"id": "g4-dahai",
+			"name": "李大漳",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "g4-datong",
+			"name": "李大温",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "g4-dalang",
+			"name": "李大淑",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "g4-daze",
+			"name": "李大泽",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "g4-dahan",
+			"name": "李大汉",
+			"gender": "male",
+			"generation": 4,
+			"parents": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "g5-xingshi",
+			"name": "李兴仕",
+			"gender": "male",
+			"generation": 5,
+			"parents": [
+				"g4-dazhun",
+				"g4-spouse"
+			],
+			"partnerIds": [
+				"g5-spouse"
+			]
+		},
+		{
+			"id": "g5-spouse",
+			"name": "雷氏",
+			"gender": "female",
+			"generation": 5,
+			"partnerIds": [
+				"g5-xingshi"
+			]
+		},
+		{
+			"id": "g6-fuyu",
+			"name": "李纯玉",
+			"gender": "male",
+			"generation": 6,
+			"parents": [
+				"g5-xingshi",
+				"g5-spouse"
+			],
+			"partnerIds": [
+				"g6-spouse"
+			]
+		},
+		{
+			"id": "g6-spouse",
+			"name": "李小女",
+			"gender": "female",
+			"generation": 6,
+			"partnerIds": [
+				"g6-fuyu"
+			],
+			"photo": "/images/source/g6-spouse-1785311131382-19.png"
+		},
+		{
+			"id": "g7-shitai",
+			"name": "李石太",
+			"gender": "male",
+			"generation": 7,
+			"parents": [
+				"g6-fuyu",
+				"g6-spouse"
+			],
+			"partnerIds": [
+				"g7-spouse"
+			]
+		},
+		{
+			"id": "g7-spouse",
+			"name": "史秀英",
+			"gender": "female",
+			"generation": 7,
+			"partnerIds": [
+				"g7-shitai"
+			]
+		},
+		{
+			"id": "g7-danu",
+			"name": "李大女",
+			"gender": "female",
+			"generation": 7,
+			"parents": [
+				"g6-fuyu",
+				"g6-spouse"
+			]
+		},
+		{
+			"id": "g7-shiping",
+			"name": "李士平",
+			"gender": "male",
+			"generation": 7,
+			"parents": [
+				"g6-fuyu",
+				"g6-spouse"
+			]
+		},
+		{
+			"id": "g8-kai",
+			"name": "李凯",
+			"gender": "male",
+			"generation": 8,
+			"parents": [
+				"g7-shitai",
+				"g7-spouse"
+			],
+			"partnerIds": [
+				"g8-duanxin"
+			],
+			"note": "本族第二帅",
+			"photo": "/images/source/g8-kai-1785311131382-24.jpg"
+		},
+		{
+			"id": "g8-duanxin",
+			"name": "段新",
+			"gender": "female",
+			"generation": 8,
+			"partnerIds": [
+				"g8-kai"
+			],
+			"note": "集美"
+		},
+		{
+			"id": "g8-zhuo",
+			"name": "李卓",
+			"gender": "male",
+			"generation": 8,
+			"parents": [
+				"g7-shitai",
+				"g7-spouse"
+			],
+			"partnerIds": [
+				"g8-lijixiang"
+			]
+		},
+		{
+			"id": "g8-lijixiang",
+			"name": "李吉祥",
+			"gender": "female",
+			"generation": 8,
+			"partnerIds": [
+				"g8-zhuo"
+			]
+		},
+		{
+			"id": "g8-liufanghong",
+			"name": "周桥红",
+			"gender": "male",
+			"generation": 8,
+			"parents": [
+				"g7-danu"
+			]
+		},
+		{
+			"id": "g8-liufangxue",
+			"name": "周桥军",
+			"gender": "male",
+			"generation": 8,
+			"parents": [
+				"g7-danu"
+			]
+		},
+		{
+			"id": "g8-fengjie",
+			"name": "李凤杰",
+			"gender": "female",
+			"generation": 8,
+			"parents": [
+				"g7-shiping"
+			]
+		},
+		{
+			"id": "person-1785308171577-s2u0aq",
+			"name": "李荣祯",
+			"gender": "male",
+			"generation": 2,
+			"parents": [
+				"g1-grandfather",
+				"g1-grandmother"
+			]
+		},
+		{
+			"id": "person-1785308238569-gmxabb",
+			"name": "李昌进",
+			"gender": "male",
+			"generation": 3,
+			"parents": [
+				"g2-rongxiang",
+				"g2-spouse"
+			]
+		},
+		{
+			"id": "person-1785308469991-20oo4j",
+			"name": "廖氏",
+			"gender": "female",
+			"generation": 3,
+			"partnerIds": [
+				"g3-changjin"
+			]
+		},
+		{
+			"id": "person-1785309941271-rldm4r",
+			"name": "李言之",
+			"gender": "female",
+			"generation": 9,
+			"parents": [
+				"g8-kai",
+				"g8-duanxin"
+			],
+			"note": "最美长公主",
+			"photo": "/images/source/person-1785309941271-rldm4r-1785311185200-34.jpg"
+		}
+	],
+	"positions": {
+		"g1-grandfather": {
+			"x": 577,
+			"y": 52
+		},
+		"g1-grandmother": {
+			"x": 663,
+			"y": 52
+		},
+		"g2-rongxiang": {
+			"x": 501,
+			"y": 220
+		},
+		"g2-spouse": {
+			"x": 577,
+			"y": 220
+		},
+		"g2-ronghua": {
+			"x": 944,
+			"y": 220
+		},
+		"g2-rongshu": {
+			"x": 828,
+			"y": 220
+		},
+		"person-1785308171577-s2u0aq": {
+			"x": 1051,
+			"y": 220
+		},
+		"g3-changjin": {
+			"x": 376,
+			"y": 388
+		},
+		"g3-changda": {
+			"x": 944,
+			"y": 388
+		},
+		"g3-changde": {
+			"x": 1051,
+			"y": 388
+		},
+		"person-1785308238569-gmxabb": {
+			"x": 828,
+			"y": 388
+		},
+		"person-1785308469991-20oo4j": {
+			"x": 439,
+			"y": 388
+		},
+		"g4-dazhun": {
+			"x": 248,
+			"y": 556
+		},
+		"g4-spouse": {
+			"x": 319,
+			"y": 556
+		},
+		"g4-dahai": {
+			"x": 598,
+			"y": 556
+		},
+		"g4-datong": {
+			"x": 716,
+			"y": 556
+		},
+		"g4-dalang": {
+			"x": 828,
+			"y": 556
+		},
+		"g4-daze": {
+			"x": 944,
+			"y": 556
+		},
+		"g4-dahan": {
+			"x": 1051,
+			"y": 556
+		},
+		"g5-xingshi": {
+			"x": 248,
+			"y": 724
+		},
+		"g5-spouse": {
+			"x": 319,
+			"y": 724
+		},
+		"g6-fuyu": {
+			"x": 248,
+			"y": 892
+		},
+		"g6-spouse": {
+			"x": 319,
+			"y": 892
+		},
+		"g7-shitai": {
+			"x": 179,
+			"y": 1060
+		},
+		"g7-spouse": {
+			"x": 248,
+			"y": 1060
+		},
+		"g7-danu": {
+			"x": 641,
+			"y": 1060
+		},
+		"g7-shiping": {
+			"x": 458,
+			"y": 1060
+		},
+		"g8-kai": {
+			"x": 121,
+			"y": 1228
+		},
+		"g8-duanxin": {
+			"x": 179,
+			"y": 1228
+		},
+		"g8-zhuo": {
+			"x": 248,
+			"y": 1228
+		},
+		"g8-lijixiang": {
+			"x": 304,
+			"y": 1228
+		},
+		"g8-liufanghong": {
+			"x": 607,
+			"y": 1228
+		},
+		"g8-liufangxue": {
+			"x": 674,
+			"y": 1228
+		},
+		"g8-fengjie": {
+			"x": 458,
+			"y": 1228
+		},
+		"person-1785309941271-rldm4r": {
+			"x": 150,
+			"y": 1396
+		},
+		"g3-spouse": {
+			"x": 577,
+			"y": 388
+		}
+	},
+	"linkMiddles": {}
+}

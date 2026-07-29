@@ -75,7 +75,7 @@
 	},
 	"navCard": {
 		"width": 280,
-		"height": 434,
+		"height": 554,
 		"order": 2,
 		"offsetX": null,
 		"offsetY": null,
@@ -85,6 +85,14 @@
 		"width": 54,
 		"height": 54,
 		"order": 8,
+		"offsetX": null,
+		"offsetY": null,
+		"enabled": true
+	},
+	"sourceCard": {
+		"width": 112,
+		"height": 112,
+		"order": 9,
 		"offsetX": null,
 		"offsetY": null,
 		"enabled": true

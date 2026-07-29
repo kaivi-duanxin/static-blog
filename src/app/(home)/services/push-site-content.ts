@@ -9,6 +9,30 @@ import type { FileItem, ArtImageUploads, SocialButtonImageUploads, BackgroundIma
 type ArtImageConfig = SiteContent['artImages'][number]
 type BackgroundImageConfig = SiteContent['backgroundImages'][number]
 
+export async function pushCardStyles(cardStyles: CardStyles): Promise<void> {
+	const token = await getAuthToken()
+	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
+	const cardStylesJson = JSON.stringify(cardStyles, null, '\t')
+	const cardStylesBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(cardStylesJson), 'base64')
+	const treeData = await createTree(
+		token,
+		GITHUB_CONFIG.OWNER,
+		GITHUB_CONFIG.REPO,
+		[
+			{
+				path: 'src/config/card-styles.json',
+				mode: '100644',
+				type: 'blob',
+				sha: cardStylesBlob.sha
+			}
+		],
+		refData.sha
+	)
+	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, 'Update home layout', treeData.sha, [refData.sha])
+
+	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
+}
+
 export async function pushSiteContent(
 	siteContent: SiteContent,
 	cardStyles: CardStyles,
