@@ -25,19 +25,19 @@
 			"url": "/images/art/raiden-home-20260724.jpg"
 		},
 		{
-			"id": "bc428679b980828e",
-			"url": "/images/art/bc428679b980828e.png"
-		},
-		{
 			"id": "3539afae77cf82cd",
 			"url": "/images/art/3539afae77cf82cd.png"
 		},
 		{
 			"id": "24b124e8ea847854",
 			"url": "/images/art/24b124e8ea847854.jpg"
+		},
+		{
+			"id": "fb6e5b58bace2b3d",
+			"url": "/images/art/fb6e5b58bace2b3d.jpg"
 		}
 	],
-	"currentArtImageId": "24b124e8ea847854",
+	"currentArtImageId": "fb6e5b58bace2b3d",
 	"backgroundImages": [
 		{
 			"id": "",
