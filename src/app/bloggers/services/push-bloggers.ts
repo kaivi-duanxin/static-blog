@@ -12,8 +12,15 @@ export type PushBloggersParams = {
 	avatarItems?: Map<string, AvatarItem>
 }
 
-export async function pushBloggers(params: PushBloggersParams): Promise<void> {
+export async function pushBloggers(params: PushBloggersParams): Promise<Blogger[]> {
 	const { bloggers, avatarItems } = params
+	const blobBloggers = bloggers.filter(blogger => blogger.avatar.startsWith('blob:'))
+	if (blobBloggers.length > 0) {
+		const missing = blobBloggers.filter(blogger => !avatarItems?.has(blogger.url))
+		if (missing.length > 0) {
+			throw new Error(`头像未准备完成：${missing.map(blogger => blogger.name).join('、')}`)
+		}
+	}
 
 	// 获取认证 token（自动从全局认证状态获取）
 	const token = await getAuthToken()
@@ -82,4 +89,5 @@ export async function pushBloggers(params: PushBloggersParams): Promise<void> {
 	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
 
 	toast.success('发布成功！')
+	return updatedBloggers
 }

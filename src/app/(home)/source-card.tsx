@@ -34,7 +34,7 @@ export default function SourceCard() {
 						<SourceFilledSVG className='size-8' />
 						<span className='absolute -right-1 -bottom-1 h-4 w-4 rounded-full border-2 border-white bg-[#c09a7f]' />
 					</div>
-					<span className='text-sm font-medium text-[#173b46]'>来源</span>
+					<span className='text-sm font-medium text-[#173b46]'>来源家谱</span>
 				</button>
 			</Card>
 		</HomeDraggableLayer>

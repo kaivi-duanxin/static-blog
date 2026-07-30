@@ -37,7 +37,7 @@ export default function Home() {
 		try {
 			await pushCardStyles(cardStyles)
 			saveEditing()
-		toast.success('首页布局偏移已保存（尚未提交到远程配置）')
+			toast.success('首页布局已写入本地文件')
 		} catch (error) {
 			console.error('Failed to save home layout:', error)
 			toast.error('Home layout save failed. Please try again.')

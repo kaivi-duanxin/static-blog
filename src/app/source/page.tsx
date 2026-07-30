@@ -611,7 +611,7 @@ export default function SourcePage() {
 								<NetworkIcon className='size-5' />
 							</div>
 							<div>
-								<h1 className='text-lg font-semibold text-[#173b46]'>来源</h1>
+								<h1 className='text-lg font-semibold text-[#173b46]'>来源家谱</h1>
 								<p className='text-xs text-[#718990]'>{editing ? '编辑人物、位置与连线' : '整体缩略图'}</p>
 							</div>
 						</div>

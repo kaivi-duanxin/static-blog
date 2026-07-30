@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import Card from '@/components/card'
 import { useCenterStore } from '@/hooks/use-center'
 import { useConfigStore } from '../app/(home)/stores/config-store'
@@ -54,6 +54,7 @@ export default function MusicCard() {
 	const audioRef = useRef<HTMLAudioElement | null>(null)
 	const currentIndexRef = useRef(currentIndex)
 	const isPlayingRef = useRef(false)
+	const playbackRequestRef = useRef(0)
 
 	const isHomePage = pathname === '/'
 
@@ -74,6 +75,24 @@ export default function MusicCard() {
 	}, [isPlaying, isHomePage, center, styles, hiCardStyles, clockCardStyles, calendarCardStyles])
 
 	const { x, y } = position
+
+	const pauseAudio = useCallback(() => {
+		// Invalidate a pending play() promise before pausing or changing its source.
+		playbackRequestRef.current += 1
+		audioRef.current?.pause()
+	}, [])
+
+	const playAudio = useCallback(async (audio: HTMLAudioElement) => {
+		const requestId = ++playbackRequestRef.current
+		try {
+			await audio.play()
+		} catch {
+			// A pause(), source change, or unmount can intentionally interrupt play().
+			if (requestId === playbackRequestRef.current) {
+				setIsPlaying(false)
+			}
+		}
+	}, [])
 
 	// Initialize audio element
 	useEffect(() => {
@@ -126,16 +145,17 @@ export default function MusicCard() {
 		currentIndexRef.current = currentIndex
 		if (audioRef.current && musicFiles[currentIndex]) {
 			const shouldPlay = isPlayingRef.current
-			audioRef.current.pause()
-			audioRef.current.src = musicFiles[currentIndex]
-			audioRef.current.loop = false
+			const audio = audioRef.current
+			pauseAudio()
+			audio.src = musicFiles[currentIndex]
+			audio.loop = false
 			setProgress(0)
 
 			if (shouldPlay) {
-				audioRef.current.play().catch(console.error)
+				void playAudio(audio)
 			}
 		}
-	}, [currentIndex, musicFiles])
+	}, [currentIndex, musicFiles, pauseAudio, playAudio])
 
 	// Handle play/pause state change
 	useEffect(() => {
@@ -143,21 +163,21 @@ export default function MusicCard() {
 		if (!audioRef.current) return
 
 		if (isPlaying) {
-			audioRef.current.play().catch(console.error)
+			void playAudio(audioRef.current)
 		} else {
-			audioRef.current.pause()
+			pauseAudio()
 		}
-	}, [isPlaying])
+	}, [isPlaying, pauseAudio, playAudio])
 
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
 			if (audioRef.current) {
-				audioRef.current.pause()
+				pauseAudio()
 				audioRef.current.src = ''
 			}
 		}
-	}, [])
+	}, [pauseAudio])
 
 	const togglePlayPause = () => {
 		setIsPlaying(!isPlaying)

@@ -4,7 +4,8 @@ export const CARD_SPACING = 36
 export const CARD_SPACING_SM = 24
 export const BLOG_SLUG_KEY = process.env.BLOG_SLUG_KEY || ''
 const GITHUB_BRANCH = process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main'
-export const LOCAL_SAVE_ENABLED = process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true' && GITHUB_BRANCH !== 'main'
+// Local persistence is available only in development and is explicitly enabled by .env.local.
+export const LOCAL_SAVE_ENABLED = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true'
 
 /**
  * GitHub 仓库配置

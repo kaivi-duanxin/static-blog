@@ -14,7 +14,7 @@ type WriteItem = {
 }
 
 function isLocalSaveEnabled() {
-	return process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true' && process.env.NEXT_PUBLIC_GITHUB_BRANCH !== 'main'
+	return process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_LOCAL_SAVE === 'true'
 }
 
 function resolveRepoPath(repoPath: string) {

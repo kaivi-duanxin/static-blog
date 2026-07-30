@@ -66,7 +66,7 @@ const list = [
 	{
 		icon: SourceOutlineSVG,
 		iconActive: SourceFilledSVG,
-		label: '来源',
+		label: '来源家谱',
 		href: '/source'
 	}
 ]
