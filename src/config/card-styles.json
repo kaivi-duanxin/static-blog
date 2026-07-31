@@ -20,8 +20,8 @@
 		"height": 132,
 		"offset": 92,
 		"order": 4,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": 213,
+		"offsetY": -188,
 		"enabled": true
 	},
 	"calendarCard": {
@@ -69,8 +69,8 @@
 		"height": 42,
 		"width": 180,
 		"order": 8,
-		"offsetX": null,
-		"offsetY": null,
+		"offsetX": 209,
+		"offsetY": -401,
 		"enabled": true
 	},
 	"navCard": {
@@ -95,6 +95,14 @@
 		"order": 9,
 		"offsetX": 179,
 		"offsetY": 341,
+		"enabled": true
+	},
+	"babyDiaryCard": {
+		"width": 155,
+		"height": 126,
+		"order": 10,
+		"offsetX": 232,
+		"offsetY": -329,
 		"enabled": true
 	},
 	"hatCard": {

@@ -1,0 +1,30 @@
+{
+	"entries": [
+		{
+			"id": "phi-first-day",
+			"datetime": "2026-01-20T14:05",
+			"title": "来到这个世界的第一天",
+			"description": "φφ出生。这里可以记录当天的照片、心情和想留下来的每一个细节。",
+			"images": [
+				"/images/baby-diary/2026073116-01.jpg"
+			]
+		},
+		{
+			"id": "phi-full-moon",
+			"datetime": "2026-02-18T10:30",
+			"title": "满月留影",
+			"description": "第一张满月纪念。进入编辑模式后可补充多张照片，并按时间持续记录。",
+			"images": []
+		},
+		{
+			"id": "phi-1785469513995",
+			"datetime": "2026-01-19T12:00",
+			"title": "φφ想和我们见面了",
+			"description": "φφ妈妈",
+			"images": [
+				"/images/baby-diary/2026073111-01.jpg",
+				"/images/baby-diary/2026073111-02.png"
+			]
+		}
+	]
+}

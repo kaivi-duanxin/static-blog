@@ -97,6 +97,14 @@
 		"offsetY": null,
 		"enabled": true
 	},
+	"babyDiaryCard": {
+		"width": 118,
+		"height": 118,
+		"order": 10,
+		"offsetX": null,
+		"offsetY": null,
+		"enabled": true
+	},
 	"hatCard": {
 		"width": 120,
 		"height": 120,

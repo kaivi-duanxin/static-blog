@@ -12,6 +12,7 @@ import LikePosition from './like-position'
 import HatCard from './hat-card'
 import BeianCard from './beian-card'
 import SourceCard from './source-card'
+import BabyDiaryCard from './baby-diary-card'
 import { useSize } from '@/hooks/use-size'
 import { motion } from 'motion/react'
 import { useLayoutEditStore } from './stores/layout-edit-store'
@@ -108,6 +109,7 @@ export default function Home() {
 				{!maxSM && cardStyles.writeButtons?.enabled !== false && <WriteButtons />}
 				{cardStyles.likePosition?.enabled !== false && <LikePosition />}
 				{!maxSM && cardStyles.sourceCard?.enabled !== false && <SourceCard />}
+				{!maxSM && cardStyles.babyDiaryCard?.enabled !== false && <BabyDiaryCard />}
 				{cardStyles.hatCard?.enabled !== false && <HatCard />}
 				{cardStyles.beianCard?.enabled !== false && <BeianCard />}
 			</div>
