@@ -8,6 +8,8 @@ import styles from './book.module.css'
 
 const BOOK_URL = process.env.NEXT_PUBLIC_BOOK_URL || '/api/book'
 const PAGE_RATIO = 437.04 / 613.92
+const RANGE_CHUNK_SIZE = 256 * 1024
+const REQUEST_ATTEMPTS = 3
 
 type Direction = 'forward' | 'backward'
 
@@ -25,6 +27,38 @@ function normalizeDesktopPage(page: number) {
 function getSpreadPages(page: number, totalPages: number): [number | null, number | null] {
 	if (page === 1) return [null, 1]
 	return [page, page + 1 <= totalPages ? page + 1 : null]
+}
+
+async function fetchWithRetry(input: RequestInfo | URL, init: RequestInit, signal: AbortSignal) {
+	let response: Response | null = null
+	let error: unknown
+
+	for (let attempt = 0; attempt < REQUEST_ATTEMPTS; attempt += 1) {
+		try {
+			response = await fetch(input, { ...init, signal })
+			if (response.ok || response.status === 206) return response
+			error = new Error(`Book request failed with ${response.status}`)
+		} catch (requestError) {
+			if (signal.aborted) throw requestError
+			error = requestError
+		}
+
+		if (attempt < REQUEST_ATTEMPTS - 1) {
+			await new Promise((resolve, reject) => {
+				const timer = window.setTimeout(resolve, 350 * (attempt + 1))
+				signal.addEventListener(
+					'abort',
+					() => {
+						window.clearTimeout(timer)
+						reject(signal.reason)
+					},
+					{ once: true }
+				)
+			})
+		}
+	}
+
+	throw error ?? new Error('Book request failed')
 }
 
 function PdfPage({ pdf, pageNumber, side }: { pdf: PDFDocumentProxy; pageNumber: number; side: 'left' | 'right' }) {
@@ -136,14 +170,46 @@ export default function BookReader() {
 
 	useEffect(() => {
 		let cancelled = false
+		const controller = new AbortController()
 
 		void (async () => {
 			try {
 				const pdfjs = await import('pdfjs-dist')
 				pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
+				const metadata = await fetchWithRetry(BOOK_URL, { method: 'HEAD', cache: 'no-store' }, controller.signal)
+				const length = Number(metadata.headers.get('content-length'))
+				if (!Number.isSafeInteger(length) || length <= 0) throw new Error('Book size is unavailable')
+
+				class BookRangeTransport extends pdfjs.PDFDataRangeTransport {
+					private readonly rangeController = controller
+
+					requestDataRange(begin: number, end: number) {
+						void fetchWithRetry(
+							BOOK_URL,
+							{
+								headers: { Range: `bytes=${begin}-${end - 1}` },
+								cache: 'no-store'
+							},
+							this.rangeController.signal
+						)
+							.then(async response => {
+								const chunk = new Uint8Array(await response.arrayBuffer())
+								if (!this.rangeController.signal.aborted) this.onDataRange(begin, chunk)
+							})
+							.catch(rangeError => {
+								if (!this.rangeController.signal.aborted) console.error(`Failed to load book bytes ${begin}-${end - 1}`, rangeError)
+							})
+					}
+
+					override abort() {
+						this.rangeController.abort()
+					}
+				}
+
+				const range = new BookRangeTransport(length, null)
 				const loadingTask = pdfjs.getDocument({
-					url: BOOK_URL,
-					rangeChunkSize: 256 * 1024,
+					range,
+					rangeChunkSize: RANGE_CHUNK_SIZE,
 					disableStream: true,
 					disableAutoFetch: true
 				})
@@ -163,6 +229,7 @@ export default function BookReader() {
 
 		return () => {
 			cancelled = true
+			controller.abort()
 			void loadingTaskRef.current?.destroy()
 			loadingTaskRef.current = null
 		}
@@ -307,6 +374,9 @@ export default function BookReader() {
 						<BookOpen aria-hidden='true' />
 						<h2>暂时无法打开这本书</h2>
 						<p>{error}</p>
+						<button type='button' className={styles.retryButton} onClick={() => window.location.reload()}>
+							重新加载
+						</button>
 					</div>
 				) : !pdf ? (
 					<div className={styles.loadingPanel}>
