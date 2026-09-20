@@ -47,8 +47,13 @@ export default function HiCard() {
 						/>
 					</>
 				)}
-				<Link href='/live2d'>
-					<img src='/images/avatar.png' className='mx-auto rounded-full' style={{ width: 120, height: 120, boxShadow: ' 0 16px 32px -5px #E2D9CE' }} />
+				<Link href='/book' aria-label='打开 Kaivi 的书' className='group mx-auto block w-fit rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-500'>
+					<img
+						src='/images/avatar.png'
+						alt='打开 Kaivi 的书'
+						className='rounded-full transition-transform duration-300 group-hover:scale-[1.03] group-active:scale-95'
+						style={{ width: 120, height: 120, boxShadow: '0 16px 32px -5px #E2D9CE' }}
+					/>
 				</Link>
 				<h1 className='font-averia mt-3 text-2xl'>
 					{greeting} <br /> I'm <span className='text-linear text-[32px]'>{username}</span> , Nice to <br /> meet you!
