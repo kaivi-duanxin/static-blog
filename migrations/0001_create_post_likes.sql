@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS post_likes (
+  slug TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 520
+);
+
+INSERT OR IGNORE INTO post_likes (slug, count) VALUES
+  ('201807', 520),
+  ('201808', 520),
+  ('201809', 520),
+  ('202107', 520),
+  ('202306', 520),
+  ('home', 521),
+  ('cka-2023', 520),
+  ('haotodo', 520),
+  ('jumplink', 520),
+  ('2025-07', 520),
+  ('2025-08', 520),
+  ('2025-09', 520),
+  ('2025-10', 520),
+  ('open-source', 520),
+  ('2026-07', 520),
+  ('2026-08', 520);

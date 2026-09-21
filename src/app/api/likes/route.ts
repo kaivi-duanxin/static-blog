@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 import defaultLikes from '@/config/likes.json'
 
 export const runtime = 'nodejs'
 
 type LikesMap = Record<string, number>
-type LikeProvider = 'local' | 'supabase' | 'memory'
+type LikeProvider = 'd1' | 'local' | 'supabase' | 'memory'
+
+type D1PreparedStatement = {
+	bind: (...values: unknown[]) => D1PreparedStatement
+	first: <T = Record<string, unknown>>() => Promise<T | null>
+	run: () => Promise<unknown>
+}
+
+type LikesDatabase = {
+	prepare: (query: string) => D1PreparedStatement
+}
+
+type LikeBackend = {
+	provider: LikeProvider
+	db?: LikesDatabase
+}
 
 const DEFAULT_BASE_COUNT = 520
 const LIKES_FILE = path.join(process.cwd(), 'src/config/likes.json')
@@ -45,12 +61,28 @@ function getSupabaseConfig() {
 	}
 }
 
-function getProvider(): LikeProvider {
+async function getD1Database() {
+	try {
+		const { env } = await getCloudflareContext({ async: true })
+		return (env as CloudflareEnv & { LIKES_DB?: LikesDatabase }).LIKES_DB ?? null
+	} catch {
+		return null
+	}
+}
+
+async function getBackend(): Promise<LikeBackend> {
 	const forcedProvider = process.env.LIKES_PROVIDER
-	if (forcedProvider === 'local' || forcedProvider === 'supabase' || forcedProvider === 'memory') return forcedProvider
-	if (isLocalSaveEnabled()) return 'local'
-	if (getSupabaseConfig()) return 'supabase'
-	return 'memory'
+	if (forcedProvider === 'local' || forcedProvider === 'supabase' || forcedProvider === 'memory') {
+		return { provider: forcedProvider }
+	}
+
+	if (isLocalSaveEnabled()) return { provider: 'local' }
+
+	const db = await getD1Database()
+	if (db) return { provider: 'd1', db }
+	if (forcedProvider === 'd1') throw new Error('LIKES_DB binding is not available')
+	if (getSupabaseConfig()) return { provider: 'supabase' }
+	return { provider: 'memory' }
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit) {
@@ -98,6 +130,43 @@ async function setLocalCount(slug: string, count: number) {
 	const likes = await readLocalLikes()
 	likes[slug] = count
 	await writeLocalLikes(likes)
+	return count
+}
+
+function getInitialCount(slug: string) {
+	return normalizeCount((defaultLikes as LikesMap)[slug])
+}
+
+async function createD1Table(db: LikesDatabase) {
+	await db
+		.prepare('CREATE TABLE IF NOT EXISTS post_likes (slug TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 520)')
+		.run()
+}
+
+async function getD1Count(db: LikesDatabase, slug: string) {
+	await createD1Table(db)
+	await db.prepare('INSERT OR IGNORE INTO post_likes (slug, count) VALUES (?, ?)').bind(slug, getInitialCount(slug)).run()
+	const row = await db.prepare('SELECT count FROM post_likes WHERE slug = ?').bind(slug).first<{ count: number }>()
+	return normalizeCount(row?.count, getInitialCount(slug))
+}
+
+async function incrementD1Count(db: LikesDatabase, slug: string) {
+	await createD1Table(db)
+	const row = await db
+		.prepare(
+			'INSERT INTO post_likes (slug, count) VALUES (?, ?) ON CONFLICT(slug) DO UPDATE SET count = count + 1 RETURNING count'
+		)
+		.bind(slug, getInitialCount(slug) + 1)
+		.first<{ count: number }>()
+	return normalizeCount(row?.count, getInitialCount(slug) + 1)
+}
+
+async function setD1Count(db: LikesDatabase, slug: string, count: number) {
+	await createD1Table(db)
+	await db
+		.prepare('INSERT INTO post_likes (slug, count) VALUES (?, ?) ON CONFLICT(slug) DO UPDATE SET count = excluded.count')
+		.bind(slug, count)
+		.run()
 	return count
 }
 
@@ -150,25 +219,26 @@ async function setSupabaseCount(slug: string, count: number) {
 	return count
 }
 
-async function getCount(slug: string) {
-	const provider = getProvider()
-	if (provider === 'supabase') return getSupabaseCount(slug)
-	if (provider === 'local') return getLocalCount(slug)
-	return normalizeCount((defaultLikes as LikesMap)[slug])
+async function getCount(backend: LikeBackend, slug: string) {
+	if (backend.provider === 'd1' && backend.db) return getD1Count(backend.db, slug)
+	if (backend.provider === 'supabase') return getSupabaseCount(slug)
+	if (backend.provider === 'local') return getLocalCount(slug)
+	return getInitialCount(slug)
 }
 
-async function setCount(slug: string, count: number) {
-	const provider = getProvider()
-	if (provider === 'supabase') return setSupabaseCount(slug, count)
-	if (provider === 'local') return setLocalCount(slug, count)
+async function setCount(backend: LikeBackend, slug: string, count: number) {
+	if (backend.provider === 'd1' && backend.db) return setD1Count(backend.db, slug, count)
+	if (backend.provider === 'supabase') return setSupabaseCount(slug, count)
+	if (backend.provider === 'local') return setLocalCount(slug, count)
 	return count
 }
 
 export async function GET(req: NextRequest) {
 	try {
 		const slug = normalizeSlug(req.nextUrl.searchParams.get('slug'))
-		const count = await getCount(slug)
-		return NextResponse.json({ slug, count, provider: getProvider() })
+		const backend = await getBackend()
+		const count = await getCount(backend, slug)
+		return NextResponse.json({ slug, count, provider: backend.provider })
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Failed to read likes'
 		return NextResponse.json({ error: message }, { status: 500 })
@@ -178,9 +248,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
 	try {
 		const slug = normalizeSlug(req.nextUrl.searchParams.get('slug'))
-		const current = await getCount(slug)
-		const count = await setCount(slug, current + 1)
-		return NextResponse.json({ slug, count, provider: getProvider() })
+		const backend = await getBackend()
+		const count =
+			backend.provider === 'd1' && backend.db
+				? await incrementD1Count(backend.db, slug)
+				: await setCount(backend, slug, (await getCount(backend, slug)) + 1)
+		return NextResponse.json({ slug, count, provider: backend.provider })
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Failed to update likes'
 		return NextResponse.json({ error: message }, { status: 500 })
@@ -196,9 +269,10 @@ export async function PATCH(req: NextRequest) {
 		const body = await req.json().catch(() => ({}))
 		const slug = normalizeSlug(body.slug)
 		const count = normalizeCount(body.count)
-		const savedCount = await setCount(slug, count)
+		const backend = await getBackend()
+		const savedCount = await setCount(backend, slug, count)
 
-		return NextResponse.json({ slug, count: savedCount, provider: getProvider() })
+		return NextResponse.json({ slug, count: savedCount, provider: backend.provider })
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Failed to set likes'
 		return NextResponse.json({ error: message }, { status: 500 })

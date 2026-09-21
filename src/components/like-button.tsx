@@ -15,22 +15,49 @@ type LikeButtonProps = {
 }
 
 const ENDPOINT = '/api/likes'
-const MAX_LOCAL_LIKES = 5
+const MAX_LOCAL_LIKES = 100
+
+type LocalLikeUsage = {
+	date: string
+	count: number
+}
 
 function getLocalLikeKey(slug: string) {
 	return `kaivi-like-count:${slug}`
 }
 
-function getLocalLikeUsage(slug: string) {
-	if (typeof window === 'undefined') return 0
-	const value = window.localStorage.getItem(getLocalLikeKey(slug))
-	const count = Number(value)
-	return Number.isFinite(count) ? count : 0
+function getLocalDate() {
+	const now = new Date()
+	const year = now.getFullYear()
+	const month = String(now.getMonth() + 1).padStart(2, '0')
+	const day = String(now.getDate()).padStart(2, '0')
+	return `${year}-${month}-${day}`
 }
 
-function setLocalLikeUsage(slug: string, count: number) {
+function getLocalLikeUsage(slug: string): LocalLikeUsage {
+	const emptyUsage = { date: getLocalDate(), count: 0 }
+	if (typeof window === 'undefined') return emptyUsage
+
+	const value = window.localStorage.getItem(getLocalLikeKey(slug))
+	if (!value) return emptyUsage
+
+	try {
+		const usage = JSON.parse(value) as Partial<LocalLikeUsage>
+		if (usage.date !== emptyUsage.date) return emptyUsage
+		const count = Number(usage.count)
+		return { date: emptyUsage.date, count: Number.isFinite(count) ? Math.max(0, count) : 0 }
+	} catch {
+		// Legacy values stored only a number and cannot be tied to today's date.
+		return emptyUsage
+	}
+}
+
+function setLocalLikeUsage(slug: string, usage: LocalLikeUsage) {
 	if (typeof window === 'undefined') return
-	window.localStorage.setItem(getLocalLikeKey(slug), String(Math.max(0, count)))
+	window.localStorage.setItem(
+		getLocalLikeKey(slug),
+		JSON.stringify({ date: usage.date, count: Math.max(0, usage.count) })
+	)
 }
 
 export default function LikeButton({ slug = 'home', delay, className }: LikeButtonProps) {
@@ -71,14 +98,14 @@ export default function LikeButton({ slug = 'home', delay, className }: LikeButt
 
 	const handleLike = useCallback(async () => {
 		if (!slug) return
-		const currentUsage = getLocalLikeUsage(slug)
-		if (currentUsage >= MAX_LOCAL_LIKES) {
-			toast('今天已经点赞 5 次啦，先留一点喜欢给明天')
+		const usage = getLocalLikeUsage(slug)
+		if (usage.count >= MAX_LOCAL_LIKES) {
+			toast('今天已经点赞 100 次啦，先留一点喜欢给明天')
 			return
 		}
 
 		const optimisticCount = (typeof fetchedCount === 'number' ? fetchedCount : baseCount) + 1
-		setLocalLikeUsage(slug, currentUsage + 1)
+		setLocalLikeUsage(slug, { ...usage, count: usage.count + 1 })
 		await mutate(optimisticCount, { revalidate: false })
 		setLiked(true)
 		setJustLiked(true)

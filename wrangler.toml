@@ -7,6 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 directory = ".open-next/assets"
 binding = "ASSETS"
 
+[[d1_databases]]
+binding = "LIKES_DB"
+database_name = "likes"
+database_id = "8b562e4c-7328-49ef-b956-73b8884e4432"
+migrations_dir = "migrations"
+
 [build]
 command = "pnpm run build:cf"
 
