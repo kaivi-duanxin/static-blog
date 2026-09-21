@@ -1,164 +1,179 @@
-# 2025 Blog
+# Kaivi Blog
 
-> 最新引导说明：https://www.yysuni.com/blog/readme
+Kaivi 的个人博客，基于 Next.js 16 和 React 19 构建，通过 OpenNext 部署到 Cloudflare Workers。
 
-该项目使用 Github App 管理项目内容，请保管好后续创建的 **Private key**，不要上传到公开网上。
+- 线上地址：https://shizhou.info
+- 主分支：`main`
+- 当前稳定版本：`main-20260921-stable`
 
-## 1. 安装
+## 当前功能
 
-使用该项目可以先不做本地开发，直接部署然后配置环境变量。具体变量名请看下列大写变量
+- 博客、月记、图片、项目、代码片段等内容页面
+- Github App 在线编辑和提交内容
+- `/book` PDF 书籍阅读器，支持左右翻页、翻页动画和页码导航
+- PDF 通过同源接口和 HTTP Range 请求按需加载，不会在首次访问时下载整本书
+- Cloudflare D1 持久化点赞
+- 每篇文章每个浏览器每天最多点赞 100 次，跨天自动重置
+- RSS 和 Sitemap
 
-```ts
-export const GITHUB_CONFIG = {
-	OWNER: process.env.NEXT_PUBLIC_GITHUB_OWNER || 'yysuni',
-	REPO: process.env.NEXT_PUBLIC_GITHUB_REPO || '2025-blog-public',
-	BRANCH: process.env.NEXT_PUBLIC_GITHUB_BRANCH || 'main',
-	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-'
-} as const
+## 技术栈
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Motion
+- PDF.js
+- Zustand / SWR
+- OpenNext Cloudflare
+- Cloudflare Workers / D1
+
+## 本地开发
+
+环境要求：Node.js 20+、pnpm。
+
+```bash
+pnpm install
+cp .env.local.example .env.local
+pnpm dev
 ```
 
-也可以自己手动先调整安装，可自行 `pnpm i`
+开发地址：http://localhost:2025
 
-## 2. 部署
+Windows PowerShell 可以使用：
 
-我这里熟悉 Vercel 部署，就以 Vercel 部署为例子。创建 Project => Import 这个项目
-
-![](https://www.yysuni.com/blogs/readme/730266f17fab9717.png)
-
-无需配置，直接点部署
-
-![](https://www.yysuni.com/blogs/readme/95dee9a69154d0d0.png)
-
-大约 60 秒会部署完成，有一个直接 vercel 域名，如：https://2025-blog-public.vercel.app/
-
-到这里部署网站已经完成了，下一步创建 Github App
-
-## 3. 创建 Github App 链接仓库
-
-在 github 个人设置里面，找到最下面的 Developer Settings ，点击进入
-
-![](https://www.yysuni.com/blogs/readme/0abb3b592cbedad6.png)
-
-进入开发者页面，点击 **New Github App**
-
-*GitHub App name* 和 *Homepage URL* , 输入什么都不影响。Webhook 也关闭，不需要。
-
-![](https://www.yysuni.com/blogs/readme/71dcd9cf8ec967c0.png)
-
-只需要注意设置一个仓库 write 权限，其它不用。
-
-![](https://www.yysuni.com/blogs/readme/2be290016e56cd34.png)
-
-点击创建，谁能安装这个仓库这个选择无所谓。直接创建。
-
-![](https://www.yysuni.com/blogs/readme/aa002e6805ab2d65.png)
-
-
-### 创建密钥
-
-创建好 Github App 后会提示必须创建一个 **Private Key**，直接创建，会自动下载（不见了也不要紧，后面自己再创建再下载就行）。页面上有个 **App ID** 需要复制一下
-
-再切换到安装页面
-
-![](https://www.yysuni.com/blogs/readme/c122b1585bb7a46a.png)
-
-这里一定要只**授权当前项目**。
-
-![](https://www.yysuni.com/blogs/readme/2cf1cee3b04326f1.png)
-
-点击安装，就完成了 Github App 管理该仓库的权限设置了。下一步就是让前端知道推送那个项目，就是最开始提到的环境变量。（如果你不会设置环境变量，直接改仓库文件 `src/consts.ts` 也行。因为是公开的，所以环境变量意义也不大）
-
-直接输入这几个环境变量值就行，一般只用设置 OWNER 和 APP_ID。其它配置不用管，直接输入创建就行。
-
-![](https://www.yysuni.com/blogs/readme/c5a049d737848abf.png)
-
-设置完成后，需要手动再部署一次，让环境变量生效。
-* 可以直接 push 一次仓库代码会触发部署
-* 也可以手动选择创建一次部署
-![](https://www.yysuni.com/blogs/readme/59a802ed8d1c3a13.png)
-
-## 4. 完成
-
-现在，部署的这个网站就可以开始使用前端改内容了。比如更改一个分享内容。
-
-**提示**，网站前端页面删改完提示成功之后，你需要等待后台的部署完成，再刷新页面才能完成服务器内容的更新哦。
-
-## 5. 删除
-
-使用这个项目应该第一件事需要删除我的 blog，单独删除，批量删除已完成。
-
-## 6. 配置
-
-大部分页面右上角都会有一个编辑按钮，意味着你可以使用 **private key** 进行配置部署。
-
-### 6.1 网站配置
-
-首页有一个不显眼的配置按钮，点击就能看到现在可以配置的内容。
-
-![](https://www.yysuni.com/blogs/readme/cddb4710e08a5069.png)
-
-## 7. 写 blog
-
-写 blog 的图片管理，可能会有疑惑。图片管理推荐逻辑是先点击 **+ 号** 添加图片，（推荐先压缩好，尺寸推荐宽度不超过 1200）。然后将上传好的图片直接拖入文案编辑区，这就已经添加好了，点击右上角预览就可以看到效果。
-
-## 8. 写给非前端
-
-非前端配置内容，还是需要一个文件指引。下面写一些更细致的代码配置。
-
-### 8.1 移除 Liquid Grass
-
-进入 `src/layout/index.tsx` 文件，删除两行代码，然后提交代码到你的 github
-```tsx
-const LiquidGrass = dynamic(() => import('@/components/liquid-grass'), { ssr: false })
-// 中间省略...
-<LiquidGrass /> // 第 53 行
+```powershell
+Copy-Item .env.local.example .env.local
+pnpm dev
 ```
 
-![](https://www.yysuni.com/blogs/readme/f70ff3fe3a77f193.png)
+常用命令：
 
-### 8.2 配置首页内容
+```bash
+pnpm dev          # 启动本地开发服务，端口 2025
+pnpm build        # Next.js 生产构建
+pnpm run build:cf # 构建 Cloudflare Worker
+pnpm preview      # 本地预览 Cloudflare 产物
+pnpm deploy       # 部署到 Cloudflare
+pnpm cf-typegen   # 生成 Cloudflare Binding 类型
+```
 
-首页的内容现在只能前端配置一部分，所以代码更改在 `src/app/(home)` 目录，这个目录代表首页所有文件。首页的具体文件为  `src/app/(home)/page.tsx`
+## 环境变量
 
- ![](https://www.yysuni.com/blogs/readme/011679cd9bf73602.png)
+以 `.env.local.example` 为模板。常用配置如下：
 
-这里可以看到有很多 `Card` 文件，需要改那个首页 Card 内容就可以点入那个具体文件修改。
+| 变量 | 用途 |
+| --- | --- |
+| `NEXT_PUBLIC_GITHUB_OWNER` | Github 仓库所有者 |
+| `NEXT_PUBLIC_GITHUB_REPO` | Github 仓库名称 |
+| `NEXT_PUBLIC_GITHUB_BRANCH` | 内容提交分支，当前为 `main` |
+| `NEXT_PUBLIC_GITHUB_APP_ID` | Github App ID |
+| `NEXT_PUBLIC_SITE_URL` | 浏览器端站点地址 |
+| `SITE_URL` | 服务端站点地址 |
+| `KAIVI_BOOK_URL` | PDF 文件的远程地址 |
+| `NEXT_PUBLIC_BOOK_URL` | 阅读器请求地址，默认 `/api/book` |
+| `LIKES_BASE_COUNT` | 新文章的基础点赞数，默认 `520` |
+| `LIKES_ADMIN_TOKEN` | 管理点赞数据时使用的服务端令牌 |
 
-比如中间的内容，为 `HiCard`，点击 `hi-card.tsx` 文件，即可更改其内容。
+密钥只能配置在本地环境或 Cloudflare 控制台中，不要提交 Github App Private Key、Cloudflare API Token 或其他服务密钥。
 
-![](https://www.yysuni.com/blogs/readme/20b0791d012163ee.png)
+## Cloudflare 部署
 
-## 9. 互助群
+Cloudflare 配置位于 [`wrangler.toml`](wrangler.toml)。代码推送到 `main` 后，Cloudflare Workers Builds 会自动执行：
 
-对于完全不是**程序员**的用户，确实会对于更新代码后，如何同步，如何**合并代码**手足无措。我创建了一个 **QQ群**（加群会简单点），或者 vx 群还是 tg 群会好一点可以 issue 里面说下就行。
+```bash
+pnpm run build:cf
+```
 
-QQ 群：[https://qm.qq.com/q/spdpenr4k2](https://qm.qq.com/q/spdpenr4k2)
-> 不好意思，之前的那个qq群ID（1021438316），不知道为啥搜不到😂
+主要部署配置：
 
-微信群：刚建好了一个微信群，没有 qq 的可以用这个微信群
-![](https://www.yysuni.com/blogs/readme/343f2c62035b8e23.webp)
+```toml
+main = ".open-next/worker.js"
+name = "static-blog"
 
-tg 群：1月1号，才创建的 tg 群 https://t.me/public_blog_2025
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+```
 
+Cloudflare 项目需要使用仓库根目录，并安装 pnpm 依赖后执行构建。生产环境变量在 Cloudflare Workers 项目设置中配置。
 
-应该主要是我自己亲自帮助你们遇到问题怎么办。（后续看看有没有好心人）
+## D1 点赞数据库
 
-希望多多的非程序员加入 blogger 行列，web blog 还是很好玩的，属于自己的 blog 世界。
+点赞数据保存在 Cloudflare D1 的 `post_likes` 表中：
 
-游戏资产不一定属于你的，你只有**使用权**，但这个 blog **网站、内容、仓库一定是属于你的**
+```text
+database_name = likes
+binding       = LIKES_DB
+database_id   = 8b562e4c-7328-49ef-b956-73b8884e4432
+```
 
-#### 特殊的导航 Card
+绑定已写入 [`wrangler.toml`](wrangler.toml)，数据库迁移位于 [`migrations/0001_create_post_likes.sql`](migrations/0001_create_post_likes.sql)。首次部署或需要手动初始化时执行：
 
-因为这个 Card 是全局都在的，所以放在了 `src/components` 目录
+```bash
+wrangler d1 migrations apply likes --remote
+```
 
-![](https://www.yysuni.com/blogs/readme/9780c38f886322fd.png)
+点赞接口位于 [`src/app/api/likes/route.ts`](src/app/api/likes/route.ts)。接口首次访问时也会自动创建表并初始化对应文章，因此 Cloudflare 没有自动执行 migration 时仍可正常工作。
 
-## Star History
+验证生产环境：
 
-<a href="https://www.star-history.com/#YYsuni/2025-blog-public&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=YYsuni/2025-blog-public&type=date&legend=top-left" />
- </picture>
-</a>
+```text
+GET https://shizhou.info/api/likes?slug=home
+```
+
+正常响应中的 `provider` 应为 `d1`。
+
+## PDF 书籍阅读器
+
+阅读地址：https://shizhou.info/book
+
+默认 PDF 来源：
+
+```text
+https://staticblog.s3.bitiful.net/Kaivi-books.pdf
+```
+
+阅读器通过 [`src/app/api/book/route.ts`](src/app/api/book/route.ts) 转发 PDF.js 的 Range 请求。更换书籍时只需要修改 `KAIVI_BOOK_URL`，无需改动前端阅读器。
+
+对象存储需要：
+
+- 支持 `GET`、`HEAD` 和 HTTP Range 请求
+- 正确返回 `Accept-Ranges`、`Content-Range`、`Content-Length`、`Content-Type`
+- 允许 Cloudflare Worker 访问文件
+
+## 目录说明
+
+```text
+src/app/             页面和 API 路由
+src/components/      公共组件
+src/config/          站点内容和默认点赞数据
+public/              静态资源
+migrations/          Cloudflare D1 迁移
+wrangler.toml        Cloudflare Worker 配置
+open-next.config.ts  OpenNext 配置
+```
+
+## 稳定版本与回滚
+
+当前稳定 tag：
+
+```text
+main-20260921-stable
+```
+
+查看稳定版本：
+
+```bash
+git fetch --tags
+git checkout main-20260921-stable
+```
+
+恢复到主分支继续开发：
+
+```bash
+git checkout main
+git pull origin main
+```
+
+如果需要让 `main` 回到某个稳定版本，应先创建备份分支或新 tag，再通过新提交恢复，避免直接覆盖远程历史。
