@@ -19,4 +19,5 @@ INSERT OR IGNORE INTO post_likes (slug, count) VALUES
   ('2025-10', 520),
   ('open-source', 520),
   ('2026-07', 520),
-  ('2026-08', 520);
+  ('2026-08', 520),
+  ('2026-09', 520);
