@@ -8,7 +8,7 @@ import { CARD_SPACING } from '@/consts'
 import MusicSVG from '@/svgs/music.svg'
 import PlaySVG from '@/svgs/play.svg'
 import { HomeDraggableLayer } from '../app/(home)/home-draggable-layer'
-import { Pause } from 'lucide-react'
+import { Pause, Volume2, VolumeX } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
@@ -26,7 +26,7 @@ const DEFAULT_MUSIC_TRACKS: MusicTrack[] = [
 
 const getRandomMusicIndex = (length: number, excludeIndex?: number) => {
 	if (length <= 0) return 0
-	const candidates = Array.from({ length }, (_, index) => index).filter((index) => index !== excludeIndex)
+	const candidates = Array.from({ length }, (_, index) => index).filter(index => index !== excludeIndex)
 	const playableIndexes = candidates.length > 0 ? candidates : [0]
 	return playableIndexes[Math.floor(Math.random() * playableIndexes.length)]
 }
@@ -51,12 +51,28 @@ export default function MusicCard() {
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [progress, setProgress] = useState(0)
+	const [volume, setVolume] = useState(1)
+	const [volumeOpen, setVolumeOpen] = useState(false)
 	const audioRef = useRef<HTMLAudioElement | null>(null)
+	const volumeControlRef = useRef<HTMLDivElement | null>(null)
 	const currentIndexRef = useRef(currentIndex)
 	const isPlayingRef = useRef(false)
 	const playbackRequestRef = useRef(0)
 
 	const isHomePage = pathname === '/'
+
+	useEffect(() => {
+		if (audioRef.current) audioRef.current.volume = volume
+	}, [volume])
+
+	useEffect(() => {
+		if (!volumeOpen) return
+		const closeOnOutsideClick = (event: PointerEvent) => {
+			if (!volumeControlRef.current?.contains(event.target as Node)) setVolumeOpen(false)
+		}
+		document.addEventListener('pointerdown', closeOnOutsideClick)
+		return () => document.removeEventListener('pointerdown', closeOnOutsideClick)
+	}, [volumeOpen])
 
 	const position = useMemo(() => {
 		// If not on home page, always position at bottom-right corner when playing
@@ -210,7 +226,7 @@ export default function MusicCard() {
 
 				<MusicSVG className='h-8 w-8' />
 
-				<div className='flex-1'>
+				<div className='min-w-0 flex-1'>
 					<div className='text-secondary text-sm'>{musicLabel}</div>
 
 					<div className='mt-1 h-2 rounded-full bg-white/60'>
@@ -218,7 +234,37 @@ export default function MusicCard() {
 					</div>
 				</div>
 
-				<button onClick={togglePlayPause} className='flex h-10 w-10 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'>
+				<div ref={volumeControlRef} className='relative flex shrink-0 items-center'>
+					<button
+						type='button'
+						aria-label='调节音量'
+						aria-expanded={volumeOpen}
+						title='调节音量'
+						onClick={() => setVolumeOpen(open => !open)}
+						className='text-brand flex h-8 w-8 items-center justify-center rounded-full bg-white/70 transition-opacity hover:opacity-80'>
+						{volume === 0 ? <VolumeX className='h-4 w-4' /> : <Volume2 className='h-4 w-4' />}
+					</button>
+					{volumeOpen && (
+						<div className='bg-card absolute right-0 bottom-full z-10 mb-3 flex w-40 items-center gap-2 rounded-lg border px-3 py-2 shadow-lg'>
+							<input
+								type='range'
+								min='0'
+								max='100'
+								value={Math.round(volume * 100)}
+								onChange={event => setVolume(Number(event.target.value) / 100)}
+								aria-label='音量'
+								className='accent-brand min-w-0 flex-1 cursor-pointer'
+							/>
+							<span className='text-secondary w-8 text-right text-xs tabular-nums'>{Math.round(volume * 100)}%</span>
+						</div>
+					)}
+				</div>
+
+				<button
+					type='button'
+					aria-label={isPlaying ? '暂停音乐' : '播放音乐'}
+					onClick={togglePlayPause}
+					className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white transition-opacity hover:opacity-80'>
 					{isPlaying ? <Pause className='text-brand h-4 w-4' /> : <PlaySVG className='text-brand ml-1 h-4 w-4' />}
 				</button>
 			</Card>
